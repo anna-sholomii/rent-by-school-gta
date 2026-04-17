@@ -156,12 +156,12 @@
   width: 340px;
   min-width: 300px;
   flex-shrink: 0;
-  background: #0d0e1a;
+  background: #ffffff;
   overflow-y: auto;
   z-index: 10;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid #1e1f2e;
+  border-right: 1px solid #e2e8f0;
 }
 
 .app__map {
@@ -182,7 +182,7 @@
   align-items: center;
   gap: 12px;
   padding: 18px 16px 14px;
-  border-bottom: 1px solid #1e1f2e;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .sidebar-logo-icon {
@@ -200,7 +200,7 @@
 .sidebar-title {
   font-size: 15px;
   font-weight: 700;
-  color: #fff;
+  color: #1e293b;
   line-height: 1.2;
 }
 
@@ -218,10 +218,10 @@
 
 .sidebar-search {
   width: 100%;
-  background: #161727;
-  border: 1.5px solid #2a2b3d;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
   border-radius: 8px;
-  color: #f1f5f9;
+  color: #1e293b;
   padding: 9px 12px;
   font-size: 13px;
   outline: none;
@@ -230,14 +230,14 @@
 }
 
 .sidebar-search:focus { border-color: #6E56CF; }
-.sidebar-search::placeholder { color: #3d3f50; }
+.sidebar-search::placeholder { color: #94a3b8; }
 
 .sidebar-suggestions {
   position: absolute;
   top: calc(100% + 4px);
   left: 16px;
   right: 16px;
-  background: #161727;
+  background: #ffffff;
   border: 1.5px solid #6E56CF;
   border-radius: 8px;
   list-style: none;
@@ -246,7 +246,7 @@
   z-index: 9999;
   max-height: 260px;
   overflow-y: auto;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
 }
 
 .sidebar-suggestion {
@@ -258,9 +258,9 @@
   transition: background 0.1s;
 }
 
-.sidebar-suggestion:hover { background: #1e1f2e; }
-.sidebar-suggestion__name { font-size: 13px; font-weight: 600; color: #f1f5f9; }
-.sidebar-suggestion__meta { font-size: 11px; color: #6b7280; }
+.sidebar-suggestion:hover { background: #f1f5f9; }
+.sidebar-suggestion__name { font-size: 13px; font-weight: 600; color: #1e293b; }
+.sidebar-suggestion__meta { font-size: 11px; color: #64748b; }
 
 /* Filters header */
 .sidebar-filters-header {
@@ -272,9 +272,9 @@
   user-select: none;
 }
 
-.sidebar-filters-icon { font-size: 14px; color: #6b7280; }
-.sidebar-filters-label { font-size: 12px; font-weight: 700; color: #9ca3af; letter-spacing: 0.08em; flex: 1; }
-.sidebar-filters-caret { font-size: 12px; color: #6b7280; }
+.sidebar-filters-icon { font-size: 14px; color: #94a3b8; }
+.sidebar-filters-label { font-size: 12px; font-weight: 700; color: #64748b; letter-spacing: 0.08em; flex: 1; }
+.sidebar-filters-caret { font-size: 12px; color: #94a3b8; }
 
 /* Filters body */
 .sidebar-filters-body {
@@ -296,7 +296,7 @@
 .sidebar-section-label {
   font-size: 11px;
   font-weight: 700;
-  color: #9ca3af;
+  color: #64748b;
   letter-spacing: 0.08em;
   display: block;
   margin-bottom: 10px;
@@ -324,7 +324,7 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: #2a2b3d;
+  background: #e2e8f0;
   border-radius: 4px;
   pointer-events: none;
 }
@@ -366,7 +366,7 @@
   display: flex;
   justify-content: space-between;
   font-size: 11px;
-  color: #4b5563;
+  color: #94a3b8;
   margin-top: 4px;
 }
 
@@ -392,7 +392,7 @@
 /* Segmented control (School Type) */
 .segmented-control {
   display: flex;
-  background: #161727;
+  background: #f1f5f9;
   border-radius: 10px;
   padding: 3px;
   gap: 2px;
@@ -404,14 +404,14 @@
   border-radius: 8px;
   border: none;
   background: transparent;
-  color: #6b7280;
+  color: #64748b;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
 }
 
-.segmented-btn:hover { color: #d1d5db; }
+.segmented-btn:hover { color: #1e293b; }
 
 .segmented-btn.active {
   background: #6E56CF;
@@ -426,11 +426,11 @@
 
 .stat-card {
   flex: 1;
-  background: #161727;
+  background: #f8fafc;
   border-radius: 10px;
   padding: 14px;
   text-align: center;
-  border: 1px solid #1e1f2e;
+  border: 1px solid #e2e8f0;
 }
 
 .stat-card__num {
@@ -618,7 +618,7 @@
   display: block;
   margin: 14px 16px 0;
   padding: 8px 16px;
-  background: #1e3a5f;
+  background: #6E56CF;
   color: #fff;
   border-radius: 8px;
   text-decoration: none;
@@ -629,7 +629,54 @@
 }
 
 .panel__website-btn:hover {
-  background: #2563eb;
+  background: #5b45b0;
+}
+
+/* Back-to-school navigation button in RentalPanel */
+.panel__back-btn {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  background: #f8fafc;
+  border: none;
+  border-bottom: 1px solid #e2e8f0;
+  color: #6E56CF;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.panel__back-btn:hover {
+  background: #f1f5f9;
+}
+
+/* Active filter count badge in collapsed header */
+.sidebar-filters-active-count {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6E56CF;
+  background: #ede9fe;
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-right: 4px;
+}
+
+/* Empty rentals state */
+.panel__empty-rentals {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.panel__empty-rentals p {
+  margin: 0 0 4px;
+}
+
+.panel__empty-rentals-hint {
+  font-size: 12px;
+  color: #cbd5e1;
+  font-style: italic;
 }
 
 .panel__section {
@@ -651,10 +698,10 @@
   font-style: italic;
 }
 
-/* Dark section wrapper for rental list */
+/* Light section wrapper for rental list */
 .panel__section--dark {
   margin-top: 16px;
-  background: #0f1021;
+  background: #f8fafc;
   padding: 16px;
   border-radius: 0;
 }
@@ -672,11 +719,11 @@
 }
 
 .panel__rental-item {
-  background: #1a1b2e;
+  background: #ffffff;
   border-radius: 10px;
   overflow: hidden;
   cursor: pointer;
-  border: 1.5px solid #2a2b3d;
+  border: 1.5px solid #e2e8f0;
   transition: all 0.15s;
 }
 
@@ -699,7 +746,7 @@
 .panel__rental-address {
   font-size: 13px;
   font-weight: 600;
-  color: #f1f5f9;
+  color: #1e293b;
   margin-bottom: 2px;
 }
 
@@ -726,7 +773,7 @@
 .panel__rental-type {
   font-size: 11px;
   color: #64748b;
-  background: #0f1021;
+  background: #f1f5f9;
   padding: 2px 7px;
   border-radius: 20px;
 }
@@ -848,4 +895,330 @@
   font-weight: 600 !important;
   border: none !important;
   box-shadow: 0 2px 6px rgba(0,0,0,0.18) !important;
+}
+
+/* ==============================
+   Sidebar Empty State
+   ============================== */
+.sidebar__empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 24px;
+  text-align: center;
+  color: #9ca3af;
+}
+.sidebar__empty-icon {
+  font-size: 36px;
+  opacity: 0.6;
+}
+.sidebar__empty-text {
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 180px;
+}
+
+/* ==============================
+   Legend note + sizing
+   ============================== */
+.map-legend__note {
+  font-size: 10px;
+  color: #94a3b8;
+  margin-top: 8px;
+  line-height: 1.4;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 6px;
+}
+
+/* Bump school name size for hierarchy */
+.panel__name {
+  font-size: 18px !important;
+  font-weight: 800 !important;
+}
+
+/* Fraser Institute collapsible note */
+.panel__fraser-toggle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid #cbd5e1;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.panel__fraser-toggle:hover {
+  border-color: #6E56CF;
+  color: #6E56CF;
+}
+
+.panel__fraser-note {
+  display: none;
+}
+
+.panel__fraser-note--visible {
+  display: block;
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 8px;
+  line-height: 1.55;
+  font-style: italic;
+  padding: 8px 10px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border-left: 3px solid #e2e8f0;
+}
+
+/* French school badge */
+.panel__french-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+/* Section header row (title + action) */
+.panel__section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Choose another school button */
+.panel__choose-school-btn {
+  background: none;
+  border: none;
+  color: #6E56CF;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+
+.panel__choose-school-btn:hover {
+  color: #5b45b0;
+}
+
+/* ==============================
+   Mobile Layout — Bottom Sheet (≤ 768px)
+   ============================== */
+@media (max-width: 768px) {
+  .app {
+    position: relative;
+    overflow: hidden;
+    flex-direction: row; /* map fills the space, sidebar overlays */
+  }
+
+  .app__map {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    width: 100%;
+    order: unset;
+  }
+
+  /* Bottom sheet — always visible as a sliver at the bottom */
+  .app__sidebar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    min-width: unset;
+    border-right: none;
+    border-top: 1px solid #e2e8f0;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.14);
+    background: #fff;
+    z-index: 1001; /* above Leaflet's highest internal z-index (1000) */
+    order: unset;
+    /* Collapsed: show just the handle + filter header (~88px) */
+    max-height: 88px;
+    overflow: hidden;
+    transition: max-height 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Drag handle */
+  .app__sidebar::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 4px;
+    background: #e2e8f0;
+    border-radius: 2px;
+    margin: 10px auto 0;
+    flex-shrink: 0;
+  }
+
+  /* Expanded: school or rental selected */
+  .app__sidebar--expanded {
+    max-height: 78vh;
+    overflow-y: auto;
+  }
+
+  /* Tighter header on mobile */
+  .sidebar-logo-row {
+    padding: 6px 12px 8px;
+    border-bottom: none;
+  }
+
+  .sidebar-title {
+    font-size: 13px;
+  }
+
+  .sidebar-subtitle {
+    display: none;
+  }
+
+  .sidebar-logo-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .sidebar-search-wrap {
+    padding: 0 12px 0;
+  }
+
+  .sidebar-filters-body {
+    padding: 0 12px 12px;
+  }
+
+  /* Hide filters in collapsed state — they appear when sheet expands */
+  .sidebar-filters-header {
+    padding: 8px 12px 6px;
+  }
+
+  /* Bigger touch targets */
+  .segmented-btn {
+    padding: 10px 0;
+    font-size: 14px;
+  }
+
+  /* Panel fills sheet */
+  .panel {
+    min-height: unset;
+  }
+}
+
+/* ==============================
+   Shepherd Coach Tour Theme
+   ============================== */
+
+/* Tooltip box */
+.shepherd-element.rbs-step {
+  background: #161727;
+  border: 1px solid #2d2f45;
+  border-radius: 12px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+  max-width: 300px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Arrow that points at target */
+.shepherd-element.rbs-step .shepherd-arrow::before {
+  background: #161727;
+  border-color: #2d2f45;
+}
+
+/* Header */
+.shepherd-element.rbs-step .shepherd-header {
+  background: transparent;
+  padding: 16px 16px 0;
+  border-radius: 12px 12px 0 0;
+}
+
+.shepherd-element.rbs-step .shepherd-title {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* Cancel (X) icon */
+.shepherd-element.rbs-step .shepherd-cancel-icon {
+  color: #6b7280;
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 8px;
+}
+.shepherd-element.rbs-step .shepherd-cancel-icon:hover {
+  color: #9ca3af;
+}
+
+/* Body text */
+.shepherd-element.rbs-step .shepherd-text {
+  color: #9ca3af;
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 8px 16px 14px;
+}
+
+/* Step counter (e.g. "1 of 3") */
+.shepherd-element.rbs-step .shepherd-footer {
+  padding: 0 16px 16px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  border-top: none;
+}
+
+/* Buttons */
+.shepherd-element.rbs-step .shepherd-button.rbs-btn-primary {
+  background: #6E56CF;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.shepherd-element.rbs-step .shepherd-button.rbs-btn-primary:hover {
+  background: #5b45b0;
+}
+
+.shepherd-element.rbs-step .shepherd-button.rbs-btn-secondary {
+  background: transparent;
+  color: #6b7280;
+  border: 1px solid #2d2f45;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.shepherd-element.rbs-step .shepherd-button.rbs-btn-secondary:hover {
+  color: #9ca3af;
+  border-color: #3d3f58;
+}
+
+/* Dark overlay with spotlight cutout */
+.shepherd-modal-overlay-container {
+  fill: rgba(0, 0, 0, 0.55);
 }

@@ -1,48 +1,24 @@
 import React from 'react';
+import { getRatingColor, getTypeLabel, getTypeColor, toTitleCase } from '../utils/school.js';
 
-function getRatingColor(rating) {
-  if (rating === null || rating === undefined) return '#9ca3af';
-  if (rating >= 8) return '#16a34a';
-  if (rating >= 6) return '#ca8a04';
-  return '#dc2626';
-}
-
-function getTypeLabel(type) {
-  const map = {
-    EP: 'English Public',
-    EC: 'English Catholic',
-    FP: 'French Public',
-    FC: 'French Catholic',
-    PR: 'Private',
-  };
-  return map[type] || type;
-}
-
-function getTypeColor(type) {
-  const map = {
-    EP: '#2563eb',
-    EC: '#dc2626',
-    FP: '#16a34a',
-    FC: '#7c3aed',
-    PR: '#6b7280',
-  };
-  return map[type] || '#6b7280';
-}
-
-function formatPrice(price) {
-  return '$' + price.toLocaleString();
-}
-
-export default function RentalPanel({ rental, assignedSchool, onClose, onSchoolClick }) {
+export default function RentalPanel({ rental, assignedSchool, previousSchool, onClose, onSchoolClick, onBackToSchool }) {
   if (!rental) return null;
 
   return (
     <div className="panel rental-panel">
-      <button className="panel__close" onClick={onClose} title="Close">✕</button>
+      <button className="panel__close" onClick={onClose} aria-label="Close rental panel">✕</button>
+
+      {/* Back to school navigation */}
+      {previousSchool && (
+        <button className="panel__back-btn" onClick={onBackToSchool}>
+          ← {toTitleCase(previousSchool.name)}
+        </button>
+      )}
 
       {/* Rental photo */}
       {rental.photo
-        ? <img src={rental.photo} alt={rental.address} className="panel__photo panel__photo--rental" style={{ width: '100%', height: '200px', objectFit: 'cover', display: 'block' }} />
+        ? <img src={rental.photo} alt={rental.address} className="panel__photo panel__photo--rental"
+            style={{ width: '100%', height: '200px', objectFit: 'cover', display: 'block' }} />
         : <div className="panel__photo panel__photo--rental"><span className="panel__photo-icon">🏠</span></div>
       }
 
@@ -53,7 +29,7 @@ export default function RentalPanel({ rental, assignedSchool, onClose, onSchoolC
 
       {/* Price */}
       <div className="panel__price-row">
-        <span className="panel__price">{formatPrice(rental.price)}</span>
+        <span className="panel__price">${rental.price.toLocaleString()}</span>
         <span className="panel__price-period">/month</span>
       </div>
 
@@ -73,12 +49,7 @@ export default function RentalPanel({ rental, assignedSchool, onClose, onSchoolC
       </div>
 
       {rental.url && (
-        <a
-          className="panel__website-btn"
-          href={rental.url}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <a className="panel__website-btn" href={rental.url} target="_blank" rel="noopener noreferrer">
           View Listing →
         </a>
       )}
@@ -88,28 +59,17 @@ export default function RentalPanel({ rental, assignedSchool, onClose, onSchoolC
         <h3 className="panel__section-title">Assigned School</h3>
         {assignedSchool ? (
           <ul className="panel__school-list">
-            <li
-              className="panel__school-item"
-              onClick={() => onSchoolClick && onSchoolClick(assignedSchool)}
-            >
+            <li className="panel__school-item" onClick={() => onSchoolClick && onSchoolClick(assignedSchool)}>
               <div className="panel__school-item-header">
-                <span
-                  className="panel__school-type-dot"
-                  style={{ background: getTypeColor(assignedSchool.schoolType) }}
-                />
-                <span className="panel__school-item-name">{assignedSchool.name}</span>
+                <span className="panel__school-type-dot" style={{ background: getTypeColor(assignedSchool.schoolType) }} />
+                <span className="panel__school-item-name">{toTitleCase(assignedSchool.name)}</span>
               </div>
               <div className="panel__school-item-meta">
-                <span
-                  className="panel__school-item-rating"
-                  style={{ background: getRatingColor(assignedSchool.rating), color: '#fff' }}
-                >
+                <span className="panel__school-item-rating"
+                  style={{ background: getRatingColor(assignedSchool.rating), color: '#fff' }}>
                   {assignedSchool.rating != null ? assignedSchool.rating.toFixed(1) : 'N/A'}
                 </span>
-                <span
-                  className="panel__school-item-type"
-                  style={{ color: getTypeColor(assignedSchool.schoolType) }}
-                >
+                <span className="panel__school-item-type" style={{ color: getTypeColor(assignedSchool.schoolType) }}>
                   {getTypeLabel(assignedSchool.schoolType)}
                 </span>
               </div>

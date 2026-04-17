@@ -1,9 +1,14 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet.markercluster';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import fraserRatings, { getFraserRating } from '../data/fraserRatings';
 import rentalsData from '../data/rentals';
 import catchmentAreas from '../data/catchmentAreas';
+import buildingFootprints from '../data/buildingFootprints.json';
+import neighbourhoodSafety from '../data/neighbourhoodSafety';
 
 // Fix Leaflet default icon paths broken by bundlers
 delete L.Icon.Default.prototype._getIconUrl;
@@ -61,29 +66,50 @@ function haversineDistance(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-function makeSchoolIcon(type, rating) {
-  const ringColor = TYPE_COLORS[type] || '#6b7280';
+// Pre-compute which school names have at least one rental in their catchment.
+// Runs once at module load — O(rentals × catchments), fast enough at current data size.
+const SCHOOLS_WITH_RENTALS = new Set();
+rentalsData.forEach(rental => {
+  Object.entries(catchmentAreas).forEach(([schoolName, area]) => {
+    if (!SCHOOLS_WITH_RENTALS.has(schoolName) &&
+        pointInPolygon(rental.lat, rental.lng, area.coordinates)) {
+      SCHOOLS_WITH_RENTALS.add(schoolName);
+    }
+  });
+});
+
+function makeSchoolIcon(type, rating, hasRentals, isFrench) {
   const ratingColor = rating === null || rating === undefined ? '#6b7280'
     : rating >= 8 ? '#16a34a'
     : rating >= 6 ? '#ca8a04'
     : rating >= 4 ? '#ea580c'
     : '#dc2626';
   const label = rating !== null && rating !== undefined ? rating.toFixed(1) : '–';
+  const dot = hasRentals
+    ? `<div style="position:absolute;bottom:3px;right:3px;width:11px;height:11px;
+        border-radius:50%;background:#f97316;border:2px solid #fff;"></div>`
+    : '';
+  const frBadge = isFrench
+    ? `<div style="position:absolute;top:1px;left:1px;background:#fff;color:#16a34a;
+        font-size:7px;font-weight:800;padding:1px 3px;border-radius:3px;
+        letter-spacing:0.03em;line-height:1.3;">FR</div>`
+    : '';
   const html = `
     <div style="
-      width:42px;height:42px;border-radius:50%;
+      position:relative;
+      width:54px;height:54px;border-radius:50%;
       background:${ratingColor};
       box-shadow:0 2px 8px rgba(0,0,0,0.5);
       display:flex;align-items:center;justify-content:center;
-      color:#fff;font-size:12px;font-weight:800;font-family:sans-serif;
+      color:#fff;font-size:13px;font-weight:800;font-family:sans-serif;
       letter-spacing:-0.5px;
-    ">${label}</div>`;
+    ">${label}${dot}${frBadge}</div>`;
   return L.divIcon({
     className: '',
     html,
-    iconSize: [42, 42],
-    iconAnchor: [21, 21],
-    popupAnchor: [0, -24],
+    iconSize: [54, 54],
+    iconAnchor: [27, 27],
+    popupAnchor: [0, -30],
   });
 }
 
@@ -108,30 +134,37 @@ function makeRentalIcon() {
   });
 }
 
-function matchesTypeFilter(schoolType, filter) {
-  if (filter === 'all') return true;
-  if (filter === 'public') return schoolType === 'EP';
-  if (filter === 'catholic') return schoolType === 'EC' || schoolType === 'FC' || schoolType === 'ES';
-  if (filter === 'french') return schoolType === 'FP' || schoolType === 'FC' || schoolType === 'FS';
-  if (filter === 'private') return schoolType === 'PR';
+function matchesTypeFilter(schoolType, boardFilter, languageFilter) {
+  const isPublic = schoolType === 'EP' || schoolType === 'FP';
+  const isCatholic = schoolType === 'EC' || schoolType === 'ES' || schoolType === 'FC' || schoolType === 'FS';
+  const isFrench = schoolType === 'FP' || schoolType === 'FC' || schoolType === 'FS';
+
+  if (boardFilter === 'public' && !isPublic) return false;
+  if (boardFilter === 'catholic' && !isCatholic) return false;
+  if (languageFilter === 'french' && !isFrench) return false;
+  if (languageFilter === 'english' && isFrench) return false;
   return true;
 }
 
 function addLegend(map) {
-  const legend = L.control({ position: 'bottomright' });
+  const legend = L.control({ position: 'bottomleft' });
   legend.onAdd = function () {
     const div = L.DomUtil.create('div', 'map-legend');
     div.innerHTML = `
-      <div class="map-legend__title">School Type</div>
+      <div class="map-legend__title">Fraser Rating</div>
       ${[
-        ['EP', '#2563eb', 'English Public (TDSB)'],
-        ['ES', '#dc2626', 'English Catholic (TCDSB)'],
-      ].map(([code, color, label]) => `
+        ['8–10', '#16a34a', 'Excellent'],
+        ['6–8',  '#ca8a04', 'Good'],
+        ['4–6',  '#ea580c', 'Average'],
+        ['< 4',  '#dc2626', 'Below avg'],
+        ['N/A',  '#6b7280', 'Not rated'],
+      ].map(([score, color, label]) => `
         <div class="map-legend__row">
-          <svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="${color}"/></svg>
+          <div style="width:26px;height:26px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:800;flex-shrink:0;">${score}</div>
           <span>${label}</span>
         </div>
       `).join('')}
+      <div class="map-legend__note">Pins show school scores.<br>Tap a pin to see rentals.</div>
     `;
     return div;
   };
@@ -246,8 +279,13 @@ function getBoundaryColor(feature) {
   return BOUNDARY_COLORS.default;
 }
 
+const FRENCH_TYPES = new Set(['FP', 'FC', 'FS']);
+const SECONDARY_TYPES = new Set(['ES', 'FS']);
+const ELEMENTARY_TYPES = new Set(['EP', 'EC', 'FP', 'FC']);
+
 export default function MapView({
-  ratingMin, ratingMax, schoolTypeFilter,
+  ratingMin, ratingMax, boardFilter, languageFilter, gradeLevelFilter,
+  budgetMin, budgetMax,
   onSchoolClick, onRentalClick,
   selectedSchool, selectedRental,
   onVisibleCountChange,
@@ -256,13 +294,27 @@ export default function MapView({
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const schoolLayersRef = useRef([]);
+  const clusterGroupRef = useRef(null);
   const rentalLayersRef = useRef([]);
   const catchmentLayerRef = useRef(null);
   const circleLayerRef = useRef(null);
   const highlightLayerRef = useRef(null);
+  const safetyLayerRef = useRef(null);
+  const maskLayerRef = useRef(null);
   const clickedMarkerRef = useRef(false);
   const onSchoolClickRef = useRef(onSchoolClick);
   const selectionTokenRef = useRef(0);
+  // buildingCacheRef is seeded synchronously from the static JSON import.
+  // Keys are "lat,lng" strings. Augmented by live Overpass for any missing entries.
+  const buildingCacheRef = useRef(
+    // Seed cache from static JSON. null means "no building found — skip Overpass".
+    // Only omit entries where the rental ID is completely absent from the JSON.
+    Object.fromEntries(
+      rentalsData
+        .filter(r => String(r.id) in buildingFootprints)
+        .map(r => [`${r.lat},${r.lng}`, buildingFootprints[String(r.id)]])
+    )
+  );
   const [schools, setSchools] = useState([]);
 
   useEffect(() => { onSchoolClickRef.current = onSchoolClick; }, [onSchoolClick]);
@@ -285,6 +337,26 @@ export default function MapView({
       maxZoom: 20,
     }).addTo(map);
     mapInstanceRef.current = map;
+
+    // Safety tint layer — rendered once below all other layers
+    const safetyLayer = L.geoJSON(neighbourhoodSafety, {
+      style: (feature) => {
+        const score = feature.properties.safetyScore;
+        const color = score >= 7 ? '#16a34a' : score >= 4 ? '#ca8a04' : '#dc2626';
+        return {
+          color,
+          weight: 1,
+          fillColor: color,
+          fillOpacity: 0.07,
+          opacity: 0.25,
+          interactive: false,
+        };
+      },
+    }).addTo(map);
+    safetyLayerRef.current = safetyLayer;
+    safetyLayer.bringToBack();
+
+    addLegend(map);
   }, []);
 
   // Load boundary GeoJSON data from Toronto Open Data on mount
@@ -340,9 +412,27 @@ export default function MapView({
     if (!mapInstanceRef.current || schools.length === 0) return;
     const map = mapInstanceRef.current;
 
-    // Remove old school markers
-    schoolLayersRef.current.forEach(l => map.removeLayer(l));
+    // Remove old cluster group and school markers
+    if (clusterGroupRef.current) {
+      map.removeLayer(clusterGroupRef.current);
+      clusterGroupRef.current = null;
+    }
     schoolLayersRef.current = [];
+
+    const clusterGroup = L.markerClusterGroup({
+      maxClusterRadius: 50,
+      showCoverageOnHover: false,
+      iconCreateFunction: (cluster) => {
+        const count = cluster.getChildCount();
+        return L.divIcon({
+          className: '',
+          html: `<div style="width:48px;height:48px;border-radius:50%;background:rgba(110,86,207,0.22);display:flex;align-items:center;justify-content:center;"><div style="width:32px;height:32px;border-radius:50%;background:#6E56CF;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,0.35);">${count}</div></div>`,
+          iconSize: [48, 48],
+          iconAnchor: [24, 24],
+        });
+      },
+    });
+    clusterGroupRef.current = clusterGroup;
 
     let visibleSchoolCount = 0;
 
@@ -369,38 +459,46 @@ export default function MapView({
       ) return;
 
       // Type filter
-      if (!matchesTypeFilter(schoolType, schoolTypeFilter)) return;
+      if (!matchesTypeFilter(schoolType, boardFilter, languageFilter)) return;
+
+      // Grade level filter
+      if (gradeLevelFilter === 'elementary' && !ELEMENTARY_TYPES.has(schoolType)) return;
+      if (gradeLevelFilter === 'secondary' && !SECONDARY_TYPES.has(schoolType)) return;
 
       // Rating filter: unrated schools always show unless we explicitly need a rating
       const ratingOk = rating === null
-        ? (ratingMin === 0) // show unrated only when min is 0
+        ? (ratingMin === 0)
         : (rating >= ratingMin && rating <= ratingMax);
       if (!ratingOk) return;
 
       visibleSchoolCount++;
-      const marker = L.marker([lat, lng], { icon: makeSchoolIcon(schoolType, rating) });
+      const hasRentals = SCHOOLS_WITH_RENTALS.has(school.name.trim());
+      const isFrench = FRENCH_TYPES.has(schoolType);
+      const marker = L.marker([lat, lng], { icon: makeSchoolIcon(schoolType, rating, hasRentals, isFrench) });
       marker.bindTooltip(school.name, { direction: 'top', offset: [0, -30] });
       marker.on('click', () => {
         clickedMarkerRef.current = true;
         setTimeout(() => { clickedMarkerRef.current = false; }, 0);
         onSchoolClick(school);
       });
-      marker.addTo(map);
+      clusterGroup.addLayer(marker);
       schoolLayersRef.current.push(marker);
     });
 
+    map.addLayer(clusterGroup);
     onVisibleCountChange && onVisibleCountChange(visibleSchoolCount, 0);
-  }, [schools, ratingMin, ratingMax, schoolTypeFilter]);
+  }, [schools, ratingMin, ratingMax, boardFilter, languageFilter, gradeLevelFilter]);
 
   // Handle selected school - draw catchment boundary
   useEffect(() => {
     if (!mapInstanceRef.current) return;
     const map = mapInstanceRef.current;
 
-    // Remove previous catchment/circle
+    // Remove previous catchment/circle/mask
     if (catchmentLayerRef.current) { map.removeLayer(catchmentLayerRef.current); catchmentLayerRef.current = null; }
     if (circleLayerRef.current) { map.removeLayer(circleLayerRef.current); circleLayerRef.current = null; }
     if (highlightLayerRef.current) { map.removeLayer(highlightLayerRef.current); highlightLayerRef.current = null; }
+    if (maskLayerRef.current) { map.removeLayer(maskLayerRef.current); maskLayerRef.current = null; }
 
     if (!selectedSchool) {
       rentalLayersRef.current.forEach(l => map.removeLayer(l));
@@ -476,41 +574,174 @@ export default function MapView({
         }
       });
 
-    function showNearbyRentals(schoolName, centerLat, centerLng) {
+    // Ray-cast point-in-polygon using Overpass geometry ({lat,lon}[] ring)
+    function insideWay(way, lat, lng) {
+      const ring = way.geometry;
+      let inside = false;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const xi = ring[i].lon, yi = ring[i].lat;
+        const xj = ring[j].lon, yj = ring[j].lat;
+        if (((yi > lat) !== (yj > lat)) &&
+            (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) {
+          inside = !inside;
+        }
+      }
+      return inside;
+    }
+
+    /**
+     * Fetch building footprints for ALL rentals in one single Overpass request.
+     * The cache is pre-seeded from buildingFootprints.json at module init.
+     * This function only hits Overpass for any rentals still missing from cache.
+     * Returns a Map: `${lat},${lng}` → [[lat,lon], ...] coords array | null
+     */
+    async function fetchBuildingsBatch(rentals) {
+      // Check cache first — collect only uncached rentals
+      const uncached = rentals.filter(r => buildingCacheRef.current[`${r.lat},${r.lng}`] === undefined);
+
+      if (uncached.length > 0) {
+        // Build a union query: one `way[building](around:60,lat,lng)` per rental
+        const unions = uncached.map(r => `way[building](around:60,${r.lat},${r.lng});`).join('\n  ');
+        const query = `[out:json][timeout:25];\n(\n  ${unions}\n);\nout geom;`;
+
+        try {
+          const res = await fetch(
+            `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`
+          );
+          if (res.ok) {
+            const data = await res.json();
+            const ways = (data.elements || []).filter(e => e.geometry?.length > 2);
+
+            // For each uncached rental, find the best matching building
+            uncached.forEach(r => {
+              const key = `${r.lat},${r.lng}`;
+              // First try: a way that contains the point
+              let hit = ways.find(w => insideWay(w, r.lat, r.lng));
+              // Fallback: nearest way (by centroid distance)
+              if (!hit && ways.length > 0) {
+                let best = null, bestDist = Infinity;
+                ways.forEach(w => {
+                  const clat = w.geometry.reduce((s, p) => s + p.lat, 0) / w.geometry.length;
+                  const clng = w.geometry.reduce((s, p) => s + p.lon, 0) / w.geometry.length;
+                  const d = haversineDistance(r.lat, r.lng, clat, clng);
+                  if (d < bestDist && d < 80) { bestDist = d; best = w; }
+                });
+                hit = best;
+              }
+              buildingCacheRef.current[key] = hit
+                ? hit.geometry.map(p => [p.lat, p.lon])
+                : null;
+            });
+          }
+        } catch (_) {}
+
+        // Ensure every uncached rental has a cache entry (null = no building found)
+        uncached.forEach(r => {
+          const key = `${r.lat},${r.lng}`;
+          if (buildingCacheRef.current[key] === undefined) {
+            buildingCacheRef.current[key] = null;
+          }
+        });
+      }
+
+      // Return a lookup map from all rentals
+      const result = new Map();
+      rentals.forEach(r => {
+        result.set(`${r.lat},${r.lng}`, buildingCacheRef.current[`${r.lat},${r.lng}`] ?? null);
+      });
+      return result;
+    }
+
+    function renderRentalLayer(rental, coords, map) {
+      let layer;
+      if (coords) {
+        layer = L.polygon(coords, {
+          color: RENTAL_COLOR,
+          weight: 2,
+          fillColor: RENTAL_COLOR,
+          fillOpacity: 0.55,
+        });
+      } else {
+        // No OSM footprint — draw a small circle so it's visually distinct from polygons
+        layer = L.circleMarker([rental.lat, rental.lng], {
+          radius: 10,
+          color: RENTAL_COLOR,
+          weight: 2,
+          fillColor: RENTAL_COLOR,
+          fillOpacity: 0.55,
+        });
+      }
+      layer.bindTooltip(`$${rental.price.toLocaleString()}/mo — ${rental.address}`, { direction: 'top' });
+      layer.on('click', () => {
+        clickedMarkerRef.current = true;
+        setTimeout(() => { clickedMarkerRef.current = false; }, 0);
+        onRentalClick(rental);
+      });
+      layer.addTo(map);
+      rentalLayersRef.current.push(layer);
+    }
+
+    async function showNearbyRentals(schoolName, centerLat, centerLng, token) {
       rentalLayersRef.current.forEach(l => map.removeLayer(l));
       rentalLayersRef.current = [];
       const area = catchmentAreas[schoolName.trim()];
-      let count = 0;
-      rentalsData.forEach(rental => {
+
+      const filtered = rentalsData.filter(rental => {
         if (area) {
-          if (!pointInPolygon(rental.lat, rental.lng, area.coordinates)) return;
+          if (!pointInPolygon(rental.lat, rental.lng, area.coordinates)) return false;
         } else {
-          if (haversineDistance(centerLat, centerLng, rental.lat, rental.lng) > 800) return;
+          if (haversineDistance(centerLat, centerLng, rental.lat, rental.lng) > 800) return false;
         }
-        count++;
-        const marker = L.marker([rental.lat, rental.lng], { icon: makeRentalIcon() });
-        marker.bindTooltip(`$${rental.price.toLocaleString()}/mo — ${rental.address}`, { direction: 'top', offset: [0, -28] });
-        marker.on('click', () => {
-          clickedMarkerRef.current = true;
-          setTimeout(() => { clickedMarkerRef.current = false; }, 0);
-          onRentalClick(rental);
-        });
-        marker.addTo(map);
-        rentalLayersRef.current.push(marker);
+        if (budgetMin != null && rental.price < budgetMin) return false;
+        if (budgetMax != null && rental.price > budgetMax) return false;
+        return true;
       });
-      onVisibleCountChange && onVisibleCountChange(null, count);
+
+      onVisibleCountChange && onVisibleCountChange(null, filtered.length);
+      if (filtered.length === 0) return;
+
+      // Single batch request for all building footprints
+      const buildingMap = await fetchBuildingsBatch(filtered);
+      if (selectionTokenRef.current !== token) return; // stale
+
+      filtered.forEach(rental => {
+        const coords = buildingMap.get(`${rental.lat},${rental.lng}`);
+        renderRentalLayer(rental, coords, map);
+      });
+    }
+
+    function drawCatchmentMask(catchmentCoords) {
+      // World-covering polygon with the catchment punched out as a hole
+      const worldRing = [
+        [90, -180], [90, 180], [-90, 180], [-90, -180], [90, -180],
+      ].map(([lat, lng]) => [lat, lng]);
+      // Catchment ring: swap [lng,lat] → [lat,lng] and reverse winding for hole
+      const holeRing = catchmentCoords[0].map(([lng, latt]) => [latt, lng]).reverse();
+      const mask = L.polygon([worldRing, holeRing], {
+        color: 'transparent',
+        fillColor: '#0f172a',
+        fillOpacity: 0.32,
+        interactive: false,
+      }).addTo(map);
+      maskLayerRef.current = mask;
     }
 
     function drawBoundaryPolygon(map, feature, boardHint) {
-      // Guard: remove any existing catchment before drawing
       if (catchmentLayerRef.current) { map.removeLayer(catchmentLayerRef.current); catchmentLayerRef.current = null; }
       if (circleLayerRef.current) { map.removeLayer(circleLayerRef.current); circleLayerRef.current = null; }
+      if (maskLayerRef.current) { map.removeLayer(maskLayerRef.current); maskLayerRef.current = null; }
 
       let colors = BOUNDARY_COLORS.default;
       if (boardHint) {
         colors = BOUNDARY_COLORS[boardHint] || BOUNDARY_COLORS.default;
       } else {
         colors = getBoundaryColor(feature);
+      }
+
+      // Draw dim mask first (behind the boundary line)
+      const geom = feature.geometry;
+      if (geom && geom.type === 'Polygon' && geom.coordinates) {
+        drawCatchmentMask(geom.coordinates);
       }
 
       const layer = L.geoJSON(feature, {
@@ -531,7 +762,7 @@ export default function MapView({
         }
       } catch (e) { /* ignore */ }
 
-      showNearbyRentals(name, lat, lng);
+      showNearbyRentals(name, lat, lng, token);
     }
 
     function drawFallbackCircle(map, lat, lng) {
@@ -544,7 +775,7 @@ export default function MapView({
         dashArray: '6 4',
       }).addTo(map);
       circleLayerRef.current = circle;
-      showNearbyRentals(name, lat, lng);
+      showNearbyRentals(name, lat, lng, token);
     }
   }, [selectedSchool, boundaryStatus]);
 

@@ -4,17 +4,20 @@ import MapView, { haversineDistance, rentalsData } from './components/MapView';
 import SchoolPanel from './components/SchoolPanel';
 import RentalPanel from './components/RentalPanel';
 import FilterBar from './components/FilterBar';
-import OnboardingModal from './components/OnboardingModal';
 import fraserRatings from './data/fraserRatings';
 import './App.css';
 
 export default function App() {
-  const [showOnboarding, setShowOnboarding] = useState(true);
   const [ratingMin, setRatingMin] = useState(0);
   const [ratingMax, setRatingMax] = useState(10);
-  const [schoolTypeFilter, setSchoolTypeFilter] = useState('all');
+  const [boardFilter, setBoardFilter] = useState('all');
+  const [languageFilter, setLanguageFilter] = useState('all');
+  const [gradeLevelFilter, setGradeLevelFilter] = useState('all');
+  const [budgetMin, setBudgetMin] = useState(1500);
+  const [budgetMax, setBudgetMax] = useState(5000);
   const [selectedSchool, setSelectedSchool] = useState(null);
   const [selectedRental, setSelectedRental] = useState(null);
+  const [previousSchool, setPreviousSchool] = useState(null);
   const [visibleSchoolCount, setVisibleSchoolCount] = useState(0);
   const [visibleRentalCount, setVisibleRentalCount] = useState(0);
   const [schoolSearch, setSchoolSearch] = useState('');
@@ -31,11 +34,21 @@ export default function App() {
     setSelectedSchool(school);
   }, []);
 
-  // When a rental marker is clicked
+  // When a rental marker is clicked — remember which school we came from
   const handleRentalClick = useCallback((rental) => {
+    setPreviousSchool(selectedSchool);
     setSelectedSchool(null);
     setSelectedRental(rental);
-  }, []);
+  }, [selectedSchool]);
+
+  // Navigate back to the school we came from
+  const handleBackToSchool = useCallback(() => {
+    if (previousSchool) {
+      setSelectedRental(null);
+      setSelectedSchool(previousSchool);
+      setPreviousSchool(null);
+    }
+  }, [previousSchool]);
 
   // Get rentals within the selected school's catchment polygon
   const nearbyRentals = selectedSchool
@@ -44,6 +57,7 @@ export default function App() {
         if (!area) return [];
         return rentalsData
           .filter(r => pointInPolygon(r.lat, r.lng, area.coordinates))
+          .filter(r => r.price >= budgetMin && r.price <= budgetMax)
           .map(r => ({
             ...r,
             distance: haversineDistance(selectedSchool.lat, selectedSchool.lng, r.lat, r.lng),
@@ -82,25 +96,25 @@ export default function App() {
       }) || null
     : null;
 
-  function handleOnboardingDone({ ratingMin, ratingMax, schoolType }) {
-    setRatingMin(ratingMin);
-    setRatingMax(ratingMax);
-    setSchoolTypeFilter(schoolType);
-    setShowOnboarding(false);
-  }
-
   return (
     <div className="app">
-      {showOnboarding && <OnboardingModal onDone={handleOnboardingDone} />}
       {/* Unified left sidebar: filters + detail panel */}
-      <div className="app__sidebar">
+      <div className={`app__sidebar${(selectedSchool || selectedRental) ? ' app__sidebar--expanded' : ''}`}>
         <FilterBar
           ratingMin={ratingMin}
           ratingMax={ratingMax}
           onRatingMinChange={setRatingMin}
           onRatingMaxChange={setRatingMax}
-          schoolTypeFilter={schoolTypeFilter}
-          onSchoolTypeChange={setSchoolTypeFilter}
+          boardFilter={boardFilter}
+          onBoardFilterChange={setBoardFilter}
+          languageFilter={languageFilter}
+          onLanguageFilterChange={setLanguageFilter}
+          gradeLevelFilter={gradeLevelFilter}
+          onGradeLevelChange={setGradeLevelFilter}
+          budgetMin={budgetMin}
+          budgetMax={budgetMax}
+          onBudgetMinChange={setBudgetMin}
+          onBudgetMaxChange={setBudgetMax}
           selectedSchool={selectedSchool}
           nearbyRentalCount={nearbyRentals.length}
           schoolSearch={schoolSearch}
@@ -120,9 +134,17 @@ export default function App() {
           <RentalPanel
             rental={selectedRental}
             assignedSchool={assignedSchool}
-            onClose={() => setSelectedRental(null)}
+            previousSchool={previousSchool}
+            onClose={() => { setSelectedRental(null); setPreviousSchool(null); }}
             onSchoolClick={handleSchoolClick}
+            onBackToSchool={handleBackToSchool}
           />
+        )}
+        {!selectedSchool && !selectedRental && (
+          <div className="sidebar__empty-state">
+            <span className="sidebar__empty-icon">🏫</span>
+            <p className="sidebar__empty-text">Click a school pin to see nearby rentals in its catchment</p>
+          </div>
         )}
       </div>
 
@@ -131,7 +153,11 @@ export default function App() {
         <MapView
           ratingMin={ratingMin}
           ratingMax={ratingMax}
-          schoolTypeFilter={schoolTypeFilter}
+          boardFilter={boardFilter}
+          languageFilter={languageFilter}
+          gradeLevelFilter={gradeLevelFilter}
+          budgetMin={budgetMin}
+          budgetMax={budgetMax}
           onSchoolClick={handleSchoolClick}
           onRentalClick={handleRentalClick}
           selectedSchool={selectedSchool}

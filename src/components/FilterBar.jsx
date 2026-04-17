@@ -1,29 +1,39 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const SCHOOL_TYPES = [
+const BOARD_TYPES = [
   { label: 'All', value: 'all' },
   { label: 'Public', value: 'public' },
   { label: 'Catholic', value: 'catholic' },
 ];
 
+const LANGUAGES = [
+  { label: 'All', value: 'all' },
+  { label: 'English', value: 'english' },
+  { label: 'French', value: 'french' },
+];
+
 const GRADE_LEVELS = [
   { label: 'All', value: 'all' },
-  { label: 'JK–3', value: 'jk3' },
-  { label: '4–6', value: '46' },
-  { label: '7–8', value: '78' },
-  { label: '9–12', value: '912' },
+  { label: 'Elementary', value: 'elementary' },
+  { label: 'Secondary', value: 'secondary' },
 ];
 
 const RATING_BADGES = [
-  { label: '8–10 Excellent', min: 8, max: 10, color: '#16a34a', bg: '#14532d' },
-  { label: '6–8 Good',       min: 6, max: 8,  color: '#d97706', bg: '#451a03' },
-  { label: '4–6 Average',    min: 4, max: 6,  color: '#ea580c', bg: '#431407' },
-  { label: '<4 Low',         min: 0, max: 4,  color: '#dc2626', bg: 'transparent' },
+  { label: '8–10 Excellent', min: 8, max: 10, color: '#15803d', bg: '#dcfce7' },
+  { label: '6–8 Good',       min: 6, max: 8,  color: '#b45309', bg: '#fef3c7' },
+  { label: '4–6 Average',    min: 4, max: 6,  color: '#c2410c', bg: '#ffedd5' },
+  { label: '<4 Low',         min: 0, max: 4,  color: '#dc2626', bg: '#fee2e2' },
 ];
+
+const BUDGET_MIN = 1500;
+const BUDGET_MAX = 5000;
 
 export default function FilterBar({
   ratingMin, ratingMax, onRatingMinChange, onRatingMaxChange,
-  schoolTypeFilter, onSchoolTypeChange,
+  boardFilter, onBoardFilterChange,
+  languageFilter, onLanguageFilterChange,
+  gradeLevelFilter, onGradeLevelChange,
+  budgetMin, budgetMax, onBudgetMinChange, onBudgetMaxChange,
   selectedSchool, nearbyRentalCount,
   schoolSearch, onSchoolSearchChange,
   allSchools, onSchoolSelect,
@@ -60,6 +70,17 @@ export default function FilterBar({
 
   const minPct = (ratingMin / 10) * 100;
   const maxPct = (ratingMax / 10) * 100;
+  const budgetMinPct = ((budgetMin - BUDGET_MIN) / (BUDGET_MAX - BUDGET_MIN)) * 100;
+  const budgetMaxPct = ((budgetMax - BUDGET_MIN) / (BUDGET_MAX - BUDGET_MIN)) * 100;
+
+  // Count how many filter groups are non-default
+  const activeFilterCount = [
+    ratingMin !== 0 || ratingMax !== 10,
+    boardFilter !== 'all',
+    languageFilter !== 'all',
+    gradeLevelFilter !== 'all',
+    budgetMin !== BUDGET_MIN || budgetMax !== BUDGET_MAX,
+  ].filter(Boolean).length;
 
   return (
     <div className="sidebar-header">
@@ -67,8 +88,8 @@ export default function FilterBar({
       <div className="sidebar-logo-row">
         <div className="sidebar-logo-icon">🏫</div>
         <div>
-          <div className="sidebar-title">Rent by School</div>
-          <div className="sidebar-subtitle">GTA edition</div>
+          <div className="sidebar-title">Rent by School - Toronto</div>
+          <div className="sidebar-subtitle">Find the rentals close to the best schools</div>
         </div>
       </div>
 
@@ -98,11 +119,34 @@ export default function FilterBar({
       <div className="sidebar-filters-header" onClick={() => setFiltersOpen(o => !o)}>
         <span className="sidebar-filters-icon">⚙</span>
         <span className="sidebar-filters-label">FILTERS</span>
+        {!filtersOpen && activeFilterCount > 0 && (
+          <span className="sidebar-filters-active-count">{activeFilterCount} active</span>
+        )}
         <span className="sidebar-filters-caret">{filtersOpen ? '∧' : '∨'}</span>
       </div>
 
       {filtersOpen && (
         <div className="sidebar-filters-body">
+
+          {/* Budget — first, most important for renters */}
+          <div className="sidebar-section">
+            <div className="sidebar-section-header">
+              <span className="sidebar-section-label">BUDGET FOR RENT</span>
+              <span className="sidebar-rating-value">${budgetMin.toLocaleString()} – ${budgetMax.toLocaleString()}</span>
+            </div>
+            <div className="dual-slider">
+              <div className="dual-slider__track">
+                <div className="dual-slider__fill" style={{ left: `${budgetMinPct}%`, right: `${100 - budgetMaxPct}%` }} />
+              </div>
+              <input type="range" min={BUDGET_MIN} max={BUDGET_MAX} step={100} value={budgetMin}
+                onChange={e => onBudgetMinChange(Math.min(Number(e.target.value), budgetMax - 100))}
+                className="dual-slider__input" />
+              <input type="range" min={BUDGET_MIN} max={BUDGET_MAX} step={100} value={budgetMax}
+                onChange={e => onBudgetMaxChange(Math.max(Number(e.target.value), budgetMin + 100))}
+                className="dual-slider__input" />
+            </div>
+            <div className="dual-slider__labels"><span>$1,500</span><span>$3,250</span><span>$5,000</span></div>
+          </div>
 
           {/* Rating */}
           <div className="sidebar-section">
@@ -111,7 +155,6 @@ export default function FilterBar({
               <span className="sidebar-rating-value">{ratingMin} – {ratingMax}</span>
             </div>
 
-            {/* Dual range slider */}
             <div className="dual-slider">
               <div className="dual-slider__track">
                 <div className="dual-slider__fill" style={{ left: `${minPct}%`, right: `${100 - maxPct}%` }} />
@@ -127,7 +170,6 @@ export default function FilterBar({
               <span>1</span><span>5</span><span>10</span>
             </div>
 
-            {/* Rating quality badges */}
             <div className="rating-badges">
               {RATING_BADGES.map(b => (
                 <button
@@ -142,15 +184,47 @@ export default function FilterBar({
             </div>
           </div>
 
-          {/* School Type */}
+          {/* Board */}
           <div className="sidebar-section">
-            <div className="sidebar-section-label">SCHOOL TYPE</div>
+            <div className="sidebar-section-label">BOARD</div>
             <div className="segmented-control">
-              {SCHOOL_TYPES.map(t => (
+              {BOARD_TYPES.map(t => (
                 <button
                   key={t.value}
-                  className={`segmented-btn${schoolTypeFilter === t.value ? ' active' : ''}`}
-                  onClick={() => onSchoolTypeChange(t.value)}
+                  className={`segmented-btn${boardFilter === t.value ? ' active' : ''}`}
+                  onClick={() => onBoardFilterChange(t.value)}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Language */}
+          <div className="sidebar-section">
+            <div className="sidebar-section-label">LANGUAGE</div>
+            <div className="segmented-control">
+              {LANGUAGES.map(t => (
+                <button
+                  key={t.value}
+                  className={`segmented-btn${languageFilter === t.value ? ' active' : ''}`}
+                  onClick={() => onLanguageFilterChange(t.value)}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Grade Level */}
+          <div className="sidebar-section">
+            <div className="sidebar-section-label">GRADE LEVEL</div>
+            <div className="segmented-control">
+              {GRADE_LEVELS.map(t => (
+                <button
+                  key={t.value}
+                  className={`segmented-btn${gradeLevelFilter === t.value ? ' active' : ''}`}
+                  onClick={() => onGradeLevelChange(t.value)}
                 >
                   {t.label}
                 </button>
