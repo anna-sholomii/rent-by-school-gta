@@ -22,6 +22,7 @@ export default function App() {
   const [visibleRentalCount, setVisibleRentalCount] = useState(0);
   const [schoolSearch, setSchoolSearch] = useState('');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [rentalExploreMode, setRentalExploreMode] = useState(false);
 
   // Callback from MapView when schools are loaded and filters change
   const handleVisibleCountChange = useCallback((sc, rc) => {
@@ -33,7 +34,11 @@ export default function App() {
   const handleSchoolClick = useCallback((school) => {
     setSelectedRental(null);
     setSelectedSchool(school);
+    setRentalExploreMode(false);
   }, []);
+
+  const handleExploreRentals = useCallback(() => setRentalExploreMode(true), []);
+  const handleBackToOverview = useCallback(() => setRentalExploreMode(false), []);
 
   // When a rental marker is clicked — remember which school we came from
   const handleRentalClick = useCallback((rental) => {
@@ -127,8 +132,11 @@ export default function App() {
           <SchoolPanel
             school={selectedSchool}
             nearbyRentals={nearbyRentals}
-            onClose={() => setSelectedSchool(null)}
+            onClose={() => { setSelectedSchool(null); setRentalExploreMode(false); }}
             onRentalClick={handleRentalClick}
+            rentalMode={rentalExploreMode}
+            onExploreRentals={handleExploreRentals}
+            onBackToOverview={handleBackToOverview}
           />
         )}
         {selectedRental && (
@@ -169,6 +177,62 @@ export default function App() {
         {/* Mobile filter dropdown — sibling of pill bar to avoid overflow clipping */}
         {mobileFiltersOpen && (
           <div className="mtf-dropdown">
+            {/* Search */}
+            <div className="mtf-section">
+              <div className="mtf-section-label">SEARCH SCHOOL</div>
+              <input
+                type="text"
+                className="mtf-search-input"
+                placeholder="School name..."
+                value={schoolSearch}
+                onChange={e => setSchoolSearch(e.target.value)}
+                autoFocus
+              />
+              {schoolSearch.trim().length >= 2 && (
+                <ul className="mtf-suggestions">
+                  {loadedSchools
+                    .filter(s => s.name.toLowerCase().includes(schoolSearch.toLowerCase()))
+                    .slice(0, 5)
+                    .map(s => (
+                      <li
+                        key={s.properties._id}
+                        className="mtf-suggestion"
+                        onMouseDown={() => {
+                          handleSchoolClick(s);
+                          setSchoolSearch(s.name);
+                          setMobileFiltersOpen(false);
+                        }}
+                      >
+                        {s.name.replace(/\b\w/g, c => c.toUpperCase())}
+                      </li>
+                    ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Budget */}
+            <div className="mtf-section">
+              <div className="mtf-section-header">
+                <div className="mtf-section-label">BUDGET</div>
+                <span className="mtf-rating-value">${budgetMin.toLocaleString()} – ${budgetMax.toLocaleString()}</span>
+              </div>
+              <div className="dual-slider">
+                <div className="dual-slider__track">
+                  <div className="dual-slider__fill" style={{
+                    left: `${((budgetMin - 1500) / 3500) * 100}%`,
+                    right: `${100 - ((budgetMax - 1500) / 3500) * 100}%`
+                  }} />
+                </div>
+                <input type="range" min={1500} max={5000} step={100} value={budgetMin}
+                  onChange={e => setBudgetMin(Math.min(Number(e.target.value), budgetMax - 100))}
+                  className="dual-slider__input" />
+                <input type="range" min={1500} max={5000} step={100} value={budgetMax}
+                  onChange={e => setBudgetMax(Math.max(Number(e.target.value), budgetMin + 100))}
+                  className="dual-slider__input" />
+              </div>
+              <div className="dual-slider__labels"><span>$1,500</span><span>$3,250</span><span>$5,000</span></div>
+            </div>
+
             {/* Board */}
             <div className="mtf-section">
               <div className="mtf-section-label">BOARD</div>
@@ -259,6 +323,7 @@ export default function App() {
           selectedRental={selectedRental}
           onVisibleCountChange={handleVisibleCountChange}
           onSchoolsLoaded={handleSchoolsLoaded}
+          exploreRentalsMode={rentalExploreMode}
         />
       </div>
     </div>

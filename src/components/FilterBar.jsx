@@ -42,11 +42,6 @@ export default function FilterBar({
   const [filtersOpen, setFiltersOpen] = useState(true);
   const searchRef = useRef(null);
 
-  // Collapse filters automatically when a school is selected
-  useEffect(() => {
-    if (selectedSchool) setFiltersOpen(false);
-    else setFiltersOpen(true);
-  }, [selectedSchool]);
 
   const suggestions = schoolSearch.trim().length >= 2
     ? allSchools.filter(s => s.name.toLowerCase().includes(schoolSearch.toLowerCase())).slice(0, 8)

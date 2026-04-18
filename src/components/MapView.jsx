@@ -285,6 +285,7 @@ export default function MapView({
   selectedSchool, selectedRental,
   onVisibleCountChange,
   onSchoolsLoaded,
+  exploreRentalsMode,
 }) {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -472,6 +473,17 @@ export default function MapView({
     map.addLayer(clusterGroup);
     onVisibleCountChange && onVisibleCountChange(visibleSchoolCount, 0);
   }, [schools, ratingMin, ratingMax, boardFilter, languageFilter, gradeLevelFilter]);
+
+  // Hide school cluster while in explore-rentals mode
+  useEffect(() => {
+    if (!mapInstanceRef.current || !clusterGroupRef.current) return;
+    const map = mapInstanceRef.current;
+    if (exploreRentalsMode) {
+      if (map.hasLayer(clusterGroupRef.current)) map.removeLayer(clusterGroupRef.current);
+    } else {
+      if (!map.hasLayer(clusterGroupRef.current)) map.addLayer(clusterGroupRef.current);
+    }
+  }, [exploreRentalsMode]);
 
   // Handle selected school - draw catchment boundary
   useEffect(() => {

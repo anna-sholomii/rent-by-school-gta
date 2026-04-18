@@ -46,7 +46,7 @@ function getScoreLabel(rating) {
   return 'Low';
 }
 
-export default function SchoolPanel({ school, nearbyRentals, onClose, onRentalClick }) {
+export default function SchoolPanel({ school, nearbyRentals, onClose, onRentalClick, rentalMode, onExploreRentals, onBackToOverview }) {
   if (!school) return null;
 
   const props = school.properties;
@@ -55,12 +55,10 @@ export default function SchoolPanel({ school, nearbyRentals, onClose, onRentalCl
   const isFrench = FRENCH_TYPES.has(schoolType);
   const hasRentals = nearbyRentals && nearbyRentals.length > 0;
 
-  const [rentalMode, setRentalMode] = useState(false);
   const [fraserExpanded, setFraserExpanded] = useState(false);
   const [mapLoading, setMapLoading] = useState(true);
 
   useEffect(() => {
-    setRentalMode(false);
     setFraserExpanded(false);
     setMapLoading(true);
     const t = setTimeout(() => setMapLoading(false), 4000);
@@ -76,10 +74,13 @@ export default function SchoolPanel({ school, nearbyRentals, onClose, onRentalCl
     return (
       <div className="panel school-panel">
         <div className="panel__rental-mode-header">
-          <button className="panel__back-btn" onClick={() => setRentalMode(false)}>← School info</button>
+          <button className="panel__back-btn" onClick={onBackToOverview}>← School info</button>
           <span className="panel__rental-mode-count">{nearbyRentals.length} rental{nearbyRentals.length !== 1 ? 's' : ''}</span>
           <button className="panel__close panel__close--inline" onClick={onClose} aria-label="Close">✕</button>
         </div>
+        <button className="panel__choose-school-btn" onClick={onClose}>
+          ← Choose another school
+        </button>
         {hasRentals ? (
           <ul className="panel__rental-list">
             {nearbyRentals.map(r => (
@@ -190,7 +191,7 @@ export default function SchoolPanel({ school, nearbyRentals, onClose, onRentalCl
         {/* CTA button */}
         <button
           className={`panel__explore-btn${!hasRentals ? ' panel__explore-btn--disabled' : ''}`}
-          onClick={() => hasRentals && setRentalMode(true)}
+          onClick={() => hasRentals && onExploreRentals && onExploreRentals()}
           disabled={!hasRentals}
         >
           {hasRentals ? 'Explore rentals →' : 'No rentals in catchment'}
