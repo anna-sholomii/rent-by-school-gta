@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getRatingColor, getTypeLabel, getTypeColor, toTitleCase, walkMinutes } from '../utils/school.js';
+import { getRatingColor, getTypeLabel, toTitleCase, walkMinutes } from '../utils/school.js';
 
 const SCHOOL_PHOTOS = [
   '/schools/agus-karta-VFapGvHYsp8-unsplash.jpg',
@@ -34,6 +34,18 @@ function getSchoolPhoto(name) {
 
 const FRENCH_TYPES = new Set(['FP', 'FC', 'FS']);
 
+function formatK(price) {
+  return price >= 1000 ? `$${(price / 1000).toFixed(1)}k` : `$${price}`;
+}
+
+function getScoreLabel(rating) {
+  if (rating == null) return null;
+  if (rating >= 8) return 'Excellent';
+  if (rating >= 6) return 'Strong';
+  if (rating >= 4) return 'Average';
+  return 'Low';
+}
+
 export default function SchoolPanel({ school, nearbyRentals, onClose, onRentalClick }) {
   if (!school) return null;
 
@@ -41,129 +53,35 @@ export default function SchoolPanel({ school, nearbyRentals, onClose, onRentalCl
   const { name, rating, website, schoolType } = school;
   const displayName = toTitleCase(props.NAME || name);
   const isFrench = FRENCH_TYPES.has(schoolType);
+  const hasRentals = nearbyRentals && nearbyRentals.length > 0;
 
-  const [mapLoading, setMapLoading] = useState(true);
+  const [rentalMode, setRentalMode] = useState(false);
   const [fraserExpanded, setFraserExpanded] = useState(false);
+  const [mapLoading, setMapLoading] = useState(true);
 
   useEffect(() => {
-    setMapLoading(true);
+    setRentalMode(false);
     setFraserExpanded(false);
+    setMapLoading(true);
     const t = setTimeout(() => setMapLoading(false), 4000);
     return () => clearTimeout(t);
   }, [name]);
 
-  const hasRentals = nearbyRentals && nearbyRentals.length > 0;
+  const priceMin = hasRentals ? Math.min(...nearbyRentals.map(r => r.price)) : null;
+  const priceMax = hasRentals ? Math.max(...nearbyRentals.map(r => r.price)) : null;
+  const scoreLabel = getScoreLabel(rating);
 
-  return (
-    <div className="panel school-panel">
-      <button className="panel__close" onClick={onClose} aria-label="Close school panel">✕</button>
-
-      <img
-        src={getSchoolPhoto(props.NAME || name)}
-        alt={displayName}
-        className="panel__photo"
-        style={{ width: '100%', height: '200px', objectFit: 'cover', display: 'block' }}
-      />
-
-      <div className="panel__header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <h2 className="panel__name" style={{ margin: 0 }}>{displayName}</h2>
-          {isFrench && (
-            <span className="panel__french-badge">FR</span>
-          )}
-        </div>
-        <span className="panel__type-badge" style={{ background: getTypeColor(schoolType) }}>
-          {getTypeLabel(schoolType)}
-        </span>
-      </div>
-
-      {/* Rating + collapsible Fraser note */}
-      <div className="panel__rating-row">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {rating != null ? (
-            <div className="panel__rating-badge" style={{ background: getRatingColor(rating) }}>
-              <span className="panel__rating-num">{rating.toFixed(1)}</span>
-              <span className="panel__rating-label">/10 Fraser</span>
-            </div>
-          ) : (
-            <div className="panel__rating-badge panel__rating-badge--unrated">
-              <span className="panel__rating-num">N/A</span>
-              <span className="panel__rating-label">Unrated</span>
-            </div>
-          )}
-          <button
-            className="panel__fraser-toggle"
-            onClick={() => setFraserExpanded(x => !x)}
-            aria-label="What is the Fraser rating?"
-          >
-            ?
-          </button>
-        </div>
-        {fraserExpanded && (
-          <p className="panel__fraser-note panel__fraser-note--visible">
-            Fraser Institute rates schools 1–10 based on academic results (standardised tests, graduation rates).
-            It's a useful proxy but doesn't capture school culture, programs, or community.
-          </p>
-        )}
-      </div>
-
-      {/* Details */}
-      <div className="panel__details">
-        {props.BOARD_NAME && props.BOARD_NAME !== 'None' && (
-          <div className="panel__detail-row">
-            <span className="panel__detail-label">Board</span>
-            <span className="panel__detail-value">{props.BOARD_NAME}</span>
-          </div>
-        )}
-        {props.ADDRESS_FULL && (
-          <div className="panel__detail-row">
-            <span className="panel__detail-label">Address</span>
-            <span className="panel__detail-value">
-              {toTitleCase(props.ADDRESS_FULL)}{props.POSTAL_CODE ? `, ${props.POSTAL_CODE}` : ''}
-            </span>
-          </div>
-        )}
-        {isFrench && (
-          <div className="panel__detail-row">
-            <span className="panel__detail-label">Language</span>
-            <span className="panel__detail-value" style={{ color: '#16a34a', fontWeight: 600 }}>French instruction</span>
-          </div>
-        )}
-      </div>
-
-      {website && (
-        <a className="panel__website-btn" href={website} target="_blank" rel="noopener noreferrer">
-          Visit School Website →
-        </a>
-      )}
-
-      {/* Rental count */}
-      <div style={{ padding: '14px 16px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <span style={{ fontSize: '28px', fontWeight: 800, color: '#7c3aed', lineHeight: 1 }}>
-          {nearbyRentals ? nearbyRentals.length : 0}
-        </span>
-        <div>
-          <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>
-            rental{nearbyRentals?.length !== 1 ? 's' : ''} available in catchment
-          </div>
-          {mapLoading && hasRentals && (
-            <div style={{ fontSize: '11px', color: '#a78bfa', marginTop: '2px' }}>
-              ↗ Locating buildings on map…
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Nearby rentals */}
-      <div className="panel__section panel__section--dark">
-        <div className="panel__section-header-row">
-          <h3 className="panel__section-title" style={{ margin: 0 }}>Rentals in catchment</h3>
-          <button className="panel__choose-school-btn" onClick={onClose}>
-            ← Choose another school
-          </button>
+  /* ── Rental list view ── */
+  if (rentalMode) {
+    return (
+      <div className="panel school-panel">
+        <div className="panel__rental-mode-header">
+          <button className="panel__back-btn" onClick={() => setRentalMode(false)}>← School info</button>
+          <span className="panel__rental-mode-count">{nearbyRentals.length} rental{nearbyRentals.length !== 1 ? 's' : ''}</span>
+          <button className="panel__close panel__close--inline" onClick={onClose} aria-label="Close">✕</button>
         </div>
         {hasRentals ? (
-          <ul className="panel__rental-list" style={{ marginTop: '10px' }}>
+          <ul className="panel__rental-list">
             {nearbyRentals.map(r => (
               <li key={r.id} className="panel__rental-item" onClick={() => onRentalClick && onRentalClick(r)}>
                 {r.imageUrl && (
@@ -185,11 +103,98 @@ export default function SchoolPanel({ school, nearbyRentals, onClose, onRentalCl
             ))}
           </ul>
         ) : (
-          <div className="panel__empty-rentals" style={{ marginTop: '10px' }}>
+          <div className="panel__empty-rentals" style={{ padding: '16px' }}>
             <p>No rentals found in this catchment.</p>
             <p className="panel__empty-rentals-hint">Try widening your budget or explore a nearby school.</p>
           </div>
         )}
+      </div>
+    );
+  }
+
+  /* ── School overview ── */
+  return (
+    <div className="panel school-panel">
+      <button className="panel__close" onClick={onClose} aria-label="Close school panel">✕</button>
+
+      <img
+        src={getSchoolPhoto(props.NAME || name)}
+        alt={displayName}
+        className="panel__photo"
+        style={{ width: '100%', height: '180px', objectFit: 'cover', display: 'block' }}
+      />
+
+      <div className="panel__overview-body">
+        {/* Type / language badges */}
+        <div className="panel__badges-row">
+          {isFrench && <span className="panel__badge panel__badge--french">French</span>}
+          <span className="panel__badge panel__badge--type">{getTypeLabel(schoolType)}</span>
+        </div>
+
+        <h2 className="panel__name">{displayName}</h2>
+
+        {props.ADDRESS_FULL && (
+          <p className="panel__location">
+            Toronto · {toTitleCase(props.ADDRESS_FULL)}{props.POSTAL_CODE ? `, ${props.POSTAL_CODE}` : ''}
+          </p>
+        )}
+
+        {/* Fraser score card */}
+        <div className="score-block">
+          <div className="score-dot" style={{ background: rating != null ? getRatingColor(rating) : '#9ca3af' }}>
+            {rating != null ? rating.toFixed(1) : '–'}
+          </div>
+          <div className="score-meta">
+            <div className="score-meta__lbl">Fraser Score</div>
+            <div className="score-meta__hdr">
+              <span className="score-meta__value">{scoreLabel || 'Not rated'}</span>
+              <button
+                className={`qbtn${fraserExpanded ? ' qbtn--on' : ''}`}
+                onClick={() => setFraserExpanded(x => !x)}
+                aria-label="What is the Fraser rating?"
+              >?</button>
+            </div>
+            {fraserExpanded && (
+              <div className="explainer">
+                Fraser Institute rates schools 1–10 based on academic results (standardised tests, graduation rates).
+                Useful signal, but doesn't capture school culture, extracurriculars, or community.
+              </div>
+            )}
+          </div>
+        </div>
+
+        {website && (
+          <a className="panel__website-btn" href={website} target="_blank" rel="noopener noreferrer">
+            Visit School Website →
+          </a>
+        )}
+
+        {/* Rental count + price range */}
+        <div className="panel__rental-summary">
+          {hasRentals ? (
+            <>
+              <span>
+                <strong>{nearbyRentals.length} rental{nearbyRentals.length !== 1 ? 's' : ''}</strong>
+                {' '}inside this catchment
+              </span>
+              <span className="panel__rental-range">{formatK(priceMin)}–{formatK(priceMax)}</span>
+            </>
+          ) : (
+            <span className="panel__rental-none">No rentals in budget range</span>
+          )}
+          {mapLoading && hasRentals && (
+            <span className="panel__locating">↗ Locating…</span>
+          )}
+        </div>
+
+        {/* CTA button */}
+        <button
+          className={`panel__explore-btn${!hasRentals ? ' panel__explore-btn--disabled' : ''}`}
+          onClick={() => hasRentals && setRentalMode(true)}
+          disabled={!hasRentals}
+        >
+          {hasRentals ? 'Explore rentals →' : 'No rentals in catchment'}
+        </button>
       </div>
     </div>
   );

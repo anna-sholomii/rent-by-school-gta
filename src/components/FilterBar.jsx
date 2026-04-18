@@ -19,10 +19,10 @@ const GRADE_LEVELS = [
 ];
 
 const RATING_BADGES = [
-  { label: '8–10 Excellent', min: 8, max: 10, color: '#15803d', bg: '#dcfce7' },
-  { label: '6–8 Good',       min: 6, max: 8,  color: '#b45309', bg: '#fef3c7' },
-  { label: '4–6 Average',    min: 4, max: 6,  color: '#c2410c', bg: '#ffedd5' },
-  { label: '<4 Low',         min: 0, max: 4,  color: '#dc2626', bg: '#fee2e2' },
+  { label: '8–10 Excellent', min: 8, max: 10, color: '#2f6b4f', bg: '#eaf4ee' },
+  { label: '6–8 Good',       min: 6, max: 8,  color: '#7a6200', bg: '#fff8e1' },
+  { label: '4–6 Average',    min: 4, max: 6,  color: '#7a3a00', bg: '#fff3e0' },
+  { label: '<4 Low',         min: 0, max: 4,  color: '#b71c1c', bg: '#fce8e6' },
 ];
 
 const BUDGET_MIN = 1500;

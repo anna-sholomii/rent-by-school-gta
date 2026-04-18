@@ -3,10 +3,10 @@
 /** 4-tier color scale, consistent between map pins and all panels */
 export function getRatingColor(rating) {
   if (rating === null || rating === undefined) return '#9ca3af';
-  if (rating >= 8) return '#16a34a';   // green  — Excellent
-  if (rating >= 6) return '#ca8a04';   // amber  — Good
-  if (rating >= 4) return '#ea580c';   // orange — Average
-  return '#dc2626';                     // red    — Low
+  if (rating >= 8) return '#4CAF50';
+  if (rating >= 6) return '#FFC107';
+  if (rating >= 4) return '#FF9800';
+  return '#E53935';
 }
 
 export function getRatingLabel(rating) {

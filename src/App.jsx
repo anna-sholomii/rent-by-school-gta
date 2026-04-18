@@ -21,6 +21,7 @@ export default function App() {
   const [visibleSchoolCount, setVisibleSchoolCount] = useState(0);
   const [visibleRentalCount, setVisibleRentalCount] = useState(0);
   const [schoolSearch, setSchoolSearch] = useState('');
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Callback from MapView when schools are loaded and filters change
   const handleVisibleCountChange = useCallback((sc, rc) => {
@@ -150,6 +151,100 @@ export default function App() {
 
       {/* Map */}
       <div className="app__map">
+        {/* Mobile filter bar — only visible on ≤768px */}
+        <div className="mobile-top-filters">
+          <button
+            className={`mtf-pill mtf-pill--dark${mobileFiltersOpen ? ' mtf-pill--open' : ''}`}
+            onClick={() => setMobileFiltersOpen(o => !o)}
+          >
+            School filters {mobileFiltersOpen ? '▴' : '▾'}
+          </button>
+        </div>
+
+        {/* Backdrop — closes dropdown when tapping outside */}
+        {mobileFiltersOpen && (
+          <div className="mtf-backdrop" onClick={() => setMobileFiltersOpen(false)} />
+        )}
+
+        {/* Mobile filter dropdown — sibling of pill bar to avoid overflow clipping */}
+        {mobileFiltersOpen && (
+          <div className="mtf-dropdown">
+            {/* Board */}
+            <div className="mtf-section">
+              <div className="mtf-section-label">BOARD</div>
+              <div className="mtf-options">
+                {['all', 'public', 'catholic'].map(v => (
+                  <button
+                    key={v}
+                    className={`mtf-option${boardFilter === v ? ' mtf-option--active' : ''}`}
+                    onClick={() => setBoardFilter(v)}
+                  >
+                    {v === 'all' ? 'All' : v.charAt(0).toUpperCase() + v.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Language */}
+            <div className="mtf-section">
+              <div className="mtf-section-label">LANGUAGE</div>
+              <div className="mtf-options">
+                {['all', 'english', 'french'].map(v => (
+                  <button
+                    key={v}
+                    className={`mtf-option${languageFilter === v ? ' mtf-option--active' : ''}`}
+                    onClick={() => setLanguageFilter(v)}
+                  >
+                    {v === 'all' ? 'All' : v.charAt(0).toUpperCase() + v.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Grade Level */}
+            <div className="mtf-section">
+              <div className="mtf-section-label">LEVEL</div>
+              <div className="mtf-options">
+                {['all', 'elementary', 'secondary'].map(v => (
+                  <button
+                    key={v}
+                    className={`mtf-option${gradeLevelFilter === v ? ' mtf-option--active' : ''}`}
+                    onClick={() => setGradeLevelFilter(v)}
+                  >
+                    {v === 'all' ? 'All' : v.charAt(0).toUpperCase() + v.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Rating slider */}
+            <div className="mtf-section">
+              <div className="mtf-section-header">
+                <div className="mtf-section-label">FRASER RATING</div>
+                <span className="mtf-rating-value">{ratingMin} – {ratingMax}</span>
+              </div>
+              <div className="dual-slider">
+                <div className="dual-slider__track">
+                  <div className="dual-slider__fill" style={{
+                    left: `${(ratingMin / 10) * 100}%`,
+                    right: `${100 - (ratingMax / 10) * 100}%`
+                  }} />
+                </div>
+                <input type="range" min={0} max={10} step={0.5} value={ratingMin}
+                  onChange={e => setRatingMin(Math.min(Number(e.target.value), ratingMax - 0.5))}
+                  className="dual-slider__input" />
+                <input type="range" min={0} max={10} step={0.5} value={ratingMax}
+                  onChange={e => setRatingMax(Math.max(Number(e.target.value), ratingMin + 0.5))}
+                  className="dual-slider__input" />
+              </div>
+              <div className="dual-slider__labels"><span>1</span><span>5</span><span>10</span></div>
+            </div>
+
+            <button className="mtf-done-btn" onClick={() => setMobileFiltersOpen(false)}>
+              Done
+            </button>
+          </div>
+        )}
         <MapView
           ratingMin={ratingMin}
           ratingMax={ratingMax}

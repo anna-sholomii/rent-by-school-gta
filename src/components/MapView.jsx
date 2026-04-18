@@ -5,11 +5,10 @@ import 'leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import fraserRatings, { getFraserRating } from '../data/fraserRatings';
+import { toTitleCase } from '../utils/school.js';
 import rentalsData from '../data/rentals';
 import catchmentAreas from '../data/catchmentAreas';
 import buildingFootprints from '../data/buildingFootprints.json';
-import neighbourhoodSafety from '../data/neighbourhoodSafety';
-
 // Fix Leaflet default icon paths broken by bundlers
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -79,16 +78,12 @@ rentalsData.forEach(rental => {
 });
 
 function makeSchoolIcon(type, rating, hasRentals, isFrench) {
-  const ratingColor = rating === null || rating === undefined ? '#6b7280'
-    : rating >= 8 ? '#16a34a'
-    : rating >= 6 ? '#ca8a04'
-    : rating >= 4 ? '#ea580c'
-    : '#dc2626';
+  const ratingColor = rating === null || rating === undefined ? '#9ca3af'
+    : rating >= 8 ? '#4CAF50'
+    : rating >= 6 ? '#FFC107'
+    : rating >= 4 ? '#FF9800'
+    : '#E53935';
   const label = rating !== null && rating !== undefined ? rating.toFixed(1) : '–';
-  const dot = hasRentals
-    ? `<div style="position:absolute;bottom:3px;right:3px;width:11px;height:11px;
-        border-radius:50%;background:#f97316;border:2px solid #fff;"></div>`
-    : '';
   const frBadge = isFrench
     ? `<div style="position:absolute;top:1px;left:1px;background:#fff;color:#16a34a;
         font-size:7px;font-weight:800;padding:1px 3px;border-radius:3px;
@@ -103,7 +98,7 @@ function makeSchoolIcon(type, rating, hasRentals, isFrench) {
       display:flex;align-items:center;justify-content:center;
       color:#fff;font-size:13px;font-weight:800;font-family:sans-serif;
       letter-spacing:-0.5px;
-    ">${label}${dot}${frBadge}</div>`;
+    ">${label}${frBadge}</div>`;
   return L.divIcon({
     className: '',
     html,
@@ -153,11 +148,11 @@ function addLegend(map) {
     div.innerHTML = `
       <div class="map-legend__title">Fraser Rating</div>
       ${[
-        ['8–10', '#16a34a', 'Excellent'],
-        ['6–8',  '#ca8a04', 'Good'],
-        ['4–6',  '#ea580c', 'Average'],
-        ['< 4',  '#dc2626', 'Below avg'],
-        ['N/A',  '#6b7280', 'Not rated'],
+        ['8–10', '#4CAF50', 'Excellent'],
+        ['6–8',  '#FFC107', 'Good'],
+        ['4–6',  '#FF9800', 'Average'],
+        ['< 4',  '#E53935', 'Below avg'],
+        ['N/A',  '#9ca3af', 'Not rated'],
       ].map(([score, color, label]) => `
         <div class="map-legend__row">
           <div style="width:26px;height:26px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:800;flex-shrink:0;">${score}</div>
@@ -299,7 +294,6 @@ export default function MapView({
   const catchmentLayerRef = useRef(null);
   const circleLayerRef = useRef(null);
   const highlightLayerRef = useRef(null);
-  const safetyLayerRef = useRef(null);
   const maskLayerRef = useRef(null);
   const clickedMarkerRef = useRef(false);
   const onSchoolClickRef = useRef(onSchoolClick);
@@ -329,32 +323,15 @@ export default function MapView({
     const map = L.map(mapRef.current, {
       center: [43.7, -79.4],
       zoom: 12,
-      zoomControl: true,
+      zoomControl: false,
     });
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
     L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_nolabels/{z}/{x}/{y}.png', {
       attribution: 'Map tiles by <a href="https://carto.com/">Carto</a>, under CC BY 3.0. Data by <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, under ODbL.',
       subdomains: 'abc',
       maxZoom: 20,
     }).addTo(map);
     mapInstanceRef.current = map;
-
-    // Safety tint layer — rendered once below all other layers
-    const safetyLayer = L.geoJSON(neighbourhoodSafety, {
-      style: (feature) => {
-        const score = feature.properties.safetyScore;
-        const color = score >= 7 ? '#16a34a' : score >= 4 ? '#ca8a04' : '#dc2626';
-        return {
-          color,
-          weight: 1,
-          fillColor: color,
-          fillOpacity: 0.07,
-          opacity: 0.25,
-          interactive: false,
-        };
-      },
-    }).addTo(map);
-    safetyLayerRef.current = safetyLayer;
-    safetyLayer.bringToBack();
 
     addLegend(map);
   }, []);
@@ -426,7 +403,7 @@ export default function MapView({
         const count = cluster.getChildCount();
         return L.divIcon({
           className: '',
-          html: `<div style="width:48px;height:48px;border-radius:50%;background:rgba(110,86,207,0.22);display:flex;align-items:center;justify-content:center;"><div style="width:32px;height:32px;border-radius:50%;background:#6E56CF;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,0.35);">${count}</div></div>`,
+          html: `<div style="width:48px;height:48px;border-radius:50%;background:rgba(217,217,217,0.5);display:flex;align-items:center;justify-content:center;"><div style="width:32px;height:32px;border-radius:50%;background:#D9D9D9;display:flex;align-items:center;justify-content:center;color:#1a1a1a;font-size:12px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,0.2);">${count}</div></div>`,
           iconSize: [48, 48],
           iconAnchor: [24, 24],
         });
@@ -475,7 +452,14 @@ export default function MapView({
       const hasRentals = SCHOOLS_WITH_RENTALS.has(school.name.trim());
       const isFrench = FRENCH_TYPES.has(schoolType);
       const marker = L.marker([lat, lng], { icon: makeSchoolIcon(schoolType, rating, hasRentals, isFrench) });
-      marker.bindTooltip(school.name, { direction: 'top', offset: [0, -30] });
+      const titleName = toTitleCase(school.name);
+      const shortName = titleName.length > 22 ? titleName.substring(0, 20) + '…' : titleName;
+      marker.bindTooltip(shortName, {
+        direction: 'top',
+        offset: [0, -10],
+        permanent: true,
+        className: 'school-label',
+      });
       marker.on('click', () => {
         clickedMarkerRef.current = true;
         setTimeout(() => { clickedMarkerRef.current = false; }, 0);
@@ -726,17 +710,19 @@ export default function MapView({
       maskLayerRef.current = mask;
     }
 
+    function getRatingZoneColors(rating) {
+      if (rating === null || rating === undefined) return { color: '#9ca3af', fillColor: 'rgba(128,128,128,0.08)' };
+      if (rating >= 7) return { color: '#4CAF50', fillColor: 'rgba(76,175,80,0.12)' };
+      if (rating >= 4) return { color: '#FFC107', fillColor: 'rgba(255,193,7,0.10)' };
+      return { color: '#E53935', fillColor: 'rgba(244,67,54,0.08)' };
+    }
+
     function drawBoundaryPolygon(map, feature, boardHint) {
       if (catchmentLayerRef.current) { map.removeLayer(catchmentLayerRef.current); catchmentLayerRef.current = null; }
       if (circleLayerRef.current) { map.removeLayer(circleLayerRef.current); circleLayerRef.current = null; }
       if (maskLayerRef.current) { map.removeLayer(maskLayerRef.current); maskLayerRef.current = null; }
 
-      let colors = BOUNDARY_COLORS.default;
-      if (boardHint) {
-        colors = BOUNDARY_COLORS[boardHint] || BOUNDARY_COLORS.default;
-      } else {
-        colors = getBoundaryColor(feature);
-      }
+      const colors = getRatingZoneColors(selectedSchool ? selectedSchool.rating : null);
 
       // Draw dim mask first (behind the boundary line)
       const geom = feature.geometry;
@@ -747,9 +733,9 @@ export default function MapView({
       const layer = L.geoJSON(feature, {
         style: {
           color: colors.color,
-          weight: 2.5,
+          weight: 1.5,
           fillColor: colors.fillColor,
-          fillOpacity: 0.15,
+          fillOpacity: 1,
           dashArray: null,
         },
       }).addTo(map);

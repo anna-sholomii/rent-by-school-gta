@@ -1,4 +1,22 @@
 /* ==============================
+   Design Tokens
+   ============================== */
+:root {
+  --bg:      #f8f8f6;
+  --ink:     #1a1a1a;
+  --ink-2:   #3a3a3a;
+  --mute:    #6b6b6b;
+  --line:    #e6e6e3;
+  --line-2:  #efefec;
+  --card:    #ffffff;
+  --green:   #4CAF50;
+  --amber:   #FFC107;
+  --orange:  #FF9800;
+  --red:     #E53935;
+  --accent:  #2f6b4f;
+}
+
+/* ==============================
    Onboarding Modal
    ============================== */
 .ob-overlay {
@@ -156,12 +174,13 @@
   width: 340px;
   min-width: 300px;
   flex-shrink: 0;
-  background: #ffffff;
+  background: var(--bg);
   overflow-y: auto;
   z-index: 10;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid #e2e8f0;
+  border-right: 0.5px solid var(--line);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .app__map {
@@ -181,32 +200,34 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 18px 16px 14px;
-  border-bottom: 1px solid #e2e8f0;
+  padding: 18px 16px 16px;
+  background: var(--ink);
+  border-bottom: none;
 }
 
 .sidebar-logo-icon {
-  width: 40px;
-  height: 40px;
-  background: #6E56CF;
+  width: 36px;
+  height: 36px;
+  background: rgba(255,255,255,0.12);
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 18px;
   flex-shrink: 0;
 }
 
 .sidebar-title {
   font-size: 15px;
-  font-weight: 700;
-  color: #1e293b;
+  font-weight: 600;
+  color: #ffffff;
   line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 
 .sidebar-subtitle {
   font-size: 11px;
-  color: #6b7280;
+  color: rgba(255,255,255,0.5);
   margin-top: 2px;
 }
 
@@ -218,19 +239,20 @@
 
 .sidebar-search {
   width: 100%;
-  background: #f8fafc;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 8px;
-  color: #1e293b;
-  padding: 9px 12px;
+  background: #ffffff;
+  border: 0.5px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink);
+  padding: 9px 14px;
   font-size: 13px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   outline: none;
   box-sizing: border-box;
   transition: border-color 0.15s;
 }
 
-.sidebar-search:focus { border-color: #6E56CF; }
-.sidebar-search::placeholder { color: #94a3b8; }
+.sidebar-search:focus { border-color: var(--ink); }
+.sidebar-search::placeholder { color: #b8b8b6; }
 
 .sidebar-suggestions {
   position: absolute;
@@ -267,14 +289,15 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 14px 16px 10px;
+  padding: 12px 16px 8px;
   cursor: pointer;
   user-select: none;
+  border-bottom: 0.5px solid var(--line);
 }
 
-.sidebar-filters-icon { font-size: 14px; color: #94a3b8; }
-.sidebar-filters-label { font-size: 12px; font-weight: 700; color: #64748b; letter-spacing: 0.08em; flex: 1; }
-.sidebar-filters-caret { font-size: 12px; color: #94a3b8; }
+.sidebar-filters-icon { font-size: 14px; color: var(--mute); }
+.sidebar-filters-label { font-size: 11px; font-weight: 700; color: var(--mute); letter-spacing: 0.08em; flex: 1; }
+.sidebar-filters-caret { font-size: 12px; color: var(--mute); }
 
 /* Filters body */
 .sidebar-filters-body {
@@ -305,9 +328,9 @@
 .sidebar-section-header .sidebar-section-label { margin-bottom: 0; }
 
 .sidebar-rating-value {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
-  color: #6E56CF;
+  color: var(--ink);
 }
 
 /* Dual range slider */
@@ -333,7 +356,7 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  background: #6E56CF;
+  background: var(--ink);
   border-radius: 4px;
 }
 
@@ -355,11 +378,11 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #6E56CF;
+  background: var(--ink);
   border: 2px solid #fff;
   pointer-events: all;
   cursor: pointer;
-  box-shadow: 0 0 0 3px rgba(110,86,207,0.25);
+  box-shadow: 0 0 0 3px rgba(26,26,26,0.15);
 }
 
 .dual-slider__labels {
@@ -372,8 +395,8 @@
 
 /* Rating quality badges */
 .rating-badges {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 6px;
   margin-top: 8px;
 }
@@ -381,10 +404,12 @@
 .rating-badge {
   font-size: 11px;
   font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 20px;
+  padding: 5px 8px;
+  border-radius: 8px;
   cursor: pointer;
   transition: opacity 0.15s;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .rating-badge:hover { opacity: 0.8; }
@@ -392,30 +417,32 @@
 /* Segmented control (School Type) */
 .segmented-control {
   display: flex;
-  background: #f1f5f9;
-  border-radius: 10px;
-  padding: 3px;
-  gap: 2px;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .segmented-btn {
-  flex: 1;
-  padding: 7px 0;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  color: #64748b;
+  flex: 0 0 auto;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 0.5px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
-.segmented-btn:hover { color: #1e293b; }
+.segmented-btn:hover { border-color: var(--ink-2); }
 
 .segmented-btn.active {
-  background: #6E56CF;
+  background: var(--ink);
+  border-color: var(--ink);
   color: #fff;
+  font-weight: 600;
 }
 
 /* Stat cards */
@@ -450,9 +477,10 @@
    ============================== */
 .panel {
   padding: 0 0 24px 0;
-  background: #fff;
+  background: var(--card);
   min-height: 100%;
   position: relative;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .panel__close {
@@ -617,20 +645,19 @@
 .panel__website-btn {
   display: block;
   margin: 14px 16px 0;
-  padding: 8px 16px;
-  background: #6E56CF;
+  padding: 10px 16px;
+  background: var(--ink);
   color: #fff;
-  border-radius: 8px;
+  border-radius: 10px;
   text-decoration: none;
   font-size: 13px;
   font-weight: 600;
   text-align: center;
-  transition: background 0.15s;
+  transition: opacity 0.15s;
+  letter-spacing: -0.005em;
 }
 
-.panel__website-btn:hover {
-  background: #5b45b0;
-}
+.panel__website-btn:hover { opacity: 0.85; }
 
 /* Back-to-school navigation button in RentalPanel */
 .panel__back-btn {
@@ -656,8 +683,8 @@
 .sidebar-filters-active-count {
   font-size: 11px;
   font-weight: 700;
-  color: #6E56CF;
-  background: #ede9fe;
+  color: var(--accent);
+  background: #eaf4ee;
   padding: 2px 8px;
   border-radius: 20px;
   margin-right: 4px;
@@ -698,6 +725,125 @@
   font-style: italic;
 }
 
+/* ── School overview body ── */
+.panel__overview-body {
+  padding: 14px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.panel__badges-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.panel__badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+.panel__badge--french {
+  color: #16a34a;
+  border-color: #16a34a33;
+  background: #f0fdf4;
+}
+.panel__badge--type {
+  color: #64748b;
+  border-color: #e2e8f0;
+  background: #f8fafc;
+}
+
+.panel__location {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Rental summary row (count + price range) */
+.panel__rental-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 13px;
+  color: #475569;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+.panel__rental-range {
+  font-size: 12px;
+  font-weight: 600;
+  color: #7c3aed;
+}
+.panel__rental-none {
+  color: #94a3b8;
+  font-style: italic;
+}
+.panel__locating {
+  font-size: 11px;
+  color: #a78bfa;
+}
+
+/* Explore rentals CTA */
+.panel__explore-btn {
+  width: 100%;
+  padding: 14px;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  transition: opacity 0.15s;
+}
+.panel__explore-btn:hover { opacity: 0.85; }
+.panel__explore-btn--disabled {
+  background: #e2e8f0;
+  color: #94a3b8;
+  cursor: default;
+}
+.panel__explore-btn--disabled:hover { opacity: 1; }
+
+/* Rental mode header */
+.panel__rental-mode-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+.panel__back-btn {
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: #7c3aed;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+.panel__rental-mode-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+.panel__close--inline {
+  position: static;
+  margin: 0;
+}
+
 /* Light section wrapper for rental list */
 .panel__section--dark {
   margin-top: 16px;
@@ -728,7 +874,7 @@
 }
 
 .panel__rental-item:hover {
-  border-color: #7c3aed;
+  border-color: var(--ink);
   transform: translateY(-1px);
 }
 
@@ -766,7 +912,7 @@
 .panel__rental-price {
   font-size: 13px;
   font-weight: 700;
-  color: #7c3aed;
+  color: var(--ink);
 }
 
 .panel__rental-beds,
@@ -855,6 +1001,21 @@
 /* ==============================
    Leaflet Map Legend
    ============================== */
+/* School name permanent tooltip */
+.school-label {
+  background: rgba(255, 255, 255, 0.92);
+  border: none !important;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.18);
+  border-radius: 6px;
+  padding: 2px 7px !important;
+  font-size: 11px;
+  font-weight: 600;
+  color: #1a1a1a;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.school-label::before { display: none !important; }
+
 .map-legend {
   background: rgba(255,255,255,0.95);
   border-radius: 8px;
@@ -938,45 +1099,103 @@
   font-weight: 800 !important;
 }
 
-/* Fraser Institute collapsible note */
-.panel__fraser-toggle {
-  width: 20px;
-  height: 20px;
+/* ==============================
+   Score block (school panel rating)
+   ============================== */
+.score-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin: 14px 16px 0;
+  padding: 14px;
+  background: #faf9f5;
+  border: 0.5px solid var(--line);
+  border-radius: 14px;
+}
+
+.score-dot {
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  border: 1.5px solid #cbd5e1;
-  background: #f8fafc;
-  color: #64748b;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  transition: border-color 0.15s, color 0.15s;
+  color: #fff;
+  font-weight: 700;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 4px 10px -4px rgba(0,0,0,0.22);
 }
 
-.panel__fraser-toggle:hover {
-  border-color: #6E56CF;
-  color: #6E56CF;
+.score-meta {
+  flex: 1;
+  min-width: 0;
 }
 
-.panel__fraser-note {
-  display: none;
+.score-meta__lbl {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--mute);
+  font-weight: 600;
 }
 
-.panel__fraser-note--visible {
-  display: block;
+.score-meta__hdr {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 3px;
+}
+
+.score-meta__value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+/* Q / Fraser explainer button */
+.qbtn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 0.5px solid var(--line);
+  background: var(--card);
+  color: var(--mute);
   font-size: 11px;
-  color: #94a3b8;
-  margin-top: 8px;
-  line-height: 1.55;
-  font-style: italic;
-  padding: 8px 10px;
-  background: #f8fafc;
-  border-radius: 6px;
-  border-left: 3px solid #e2e8f0;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
+
+.qbtn:hover { border-color: var(--ink-2); }
+
+.qbtn--on {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+
+.explainer {
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: #fff8e6;
+  border: 0.5px solid #f0e3bf;
+  border-radius: 10px;
+}
+
+/* Keep old class names inert so nothing breaks */
+.panel__fraser-note { display: none; }
+.panel__fraser-note--visible { display: none; }
+.panel__fraser-toggle { display: none; }
 
 /* French school badge */
 .panel__french-badge {
@@ -1019,6 +1238,158 @@
 }
 
 /* ==============================
+   Mobile Top Filter Pills
+   ============================== */
+.mobile-top-filters {
+  display: none; /* hidden on desktop */
+}
+
+@media (max-width: 768px) {
+  .mobile-top-filters {
+    display: flex;
+    gap: 8px;
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    z-index: 1000;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .mobile-top-filters::-webkit-scrollbar { display: none; }
+}
+
+.mtf-pill {
+  flex-shrink: 0;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  background: rgba(255,255,255,0.95);
+  color: #1a1a1a;
+  border: 1px solid rgba(0,0,0,0.12);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.12);
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+.mtf-pill--dark {
+  background: #1a1a1a;
+  color: #fff;
+  border-color: #1a1a1a;
+}
+.mtf-pill--active {
+  background: #1a1a1a;
+  color: #fff;
+  border-color: #1a1a1a;
+}
+
+/* Backdrop for closing filter dropdown */
+.mtf-backdrop {
+  display: none;
+}
+@media (max-width: 768px) {
+  .mtf-backdrop {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 1001;
+  }
+}
+
+/* Filter dropdown — hidden on desktop, shown on mobile only */
+.mtf-dropdown {
+  display: none;
+  position: absolute;
+  top: 52px;
+  left: 12px;
+  right: 12px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  padding: 16px;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 1002;
+}
+
+@media (max-width: 768px) {
+  .mtf-dropdown {
+    display: flex;
+  }
+}
+
+.mtf-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mtf-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mtf-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.mtf-rating-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.mtf-options {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.mtf-option {
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.mtf-option--active {
+  background: #1a1a1a;
+  color: #fff;
+  border-color: #1a1a1a;
+}
+
+.mtf-done-btn {
+  width: 100%;
+  height: 44px;
+  border-radius: 12px;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  border: none;
+  cursor: pointer;
+  margin-top: 2px;
+}
+
+/* ==============================
    Mobile Layout — Bottom Sheet (≤ 768px)
    ============================== */
 @media (max-width: 768px) {
@@ -1036,7 +1407,7 @@
     order: unset;
   }
 
-  /* Bottom sheet — always visible as a sliver at the bottom */
+  /* Bottom sheet — hidden until school/rental selected */
   .app__sidebar {
     position: absolute;
     bottom: 0;
@@ -1045,25 +1416,24 @@
     width: 100%;
     min-width: unset;
     border-right: none;
-    border-top: 1px solid #e2e8f0;
+    border-top: none;
     border-radius: 20px 20px 0 0;
-    box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.14);
-    background: #fff;
-    z-index: 1001; /* above Leaflet's highest internal z-index (1000) */
+    box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.22);
+    background: var(--bg);
+    z-index: 1001;
     order: unset;
-    /* Collapsed: show just the handle + filter header (~88px) */
-    max-height: 88px;
+    max-height: 0;
     overflow: hidden;
     transition: max-height 0.38s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Drag handle */
-  .app__sidebar::before {
+  /* Drag handle — only visible when sheet is open */
+  .app__sidebar--expanded::before {
     content: '';
     display: block;
     width: 36px;
     height: 4px;
-    background: #e2e8f0;
+    background: #cbd5e1;
     border-radius: 2px;
     margin: 10px auto 0;
     flex-shrink: 0;
@@ -1071,41 +1441,17 @@
 
   /* Expanded: school or rental selected */
   .app__sidebar--expanded {
-    max-height: 78vh;
+    max-height: 82vh;
     overflow-y: auto;
   }
 
-  /* Tighter header on mobile */
-  .sidebar-logo-row {
-    padding: 6px 12px 8px;
-    border-bottom: none;
-  }
-
-  .sidebar-title {
-    font-size: 13px;
-  }
-
-  .sidebar-subtitle {
+  /* Hide logo, search, filters and empty state — not needed in bottom sheet */
+  .sidebar-logo-row,
+  .sidebar-search-wrap,
+  .sidebar-filters-header,
+  .sidebar-filters-body,
+  .sidebar__empty-state {
     display: none;
-  }
-
-  .sidebar-logo-icon {
-    width: 32px;
-    height: 32px;
-    font-size: 16px;
-  }
-
-  .sidebar-search-wrap {
-    padding: 0 12px 0;
-  }
-
-  .sidebar-filters-body {
-    padding: 0 12px 12px;
-  }
-
-  /* Hide filters in collapsed state — they appear when sheet expands */
-  .sidebar-filters-header {
-    padding: 8px 12px 6px;
   }
 
   /* Bigger touch targets */
