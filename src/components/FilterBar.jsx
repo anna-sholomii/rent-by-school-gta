@@ -13,9 +13,10 @@ const LANGUAGES = [
 ];
 
 const GRADE_LEVELS = [
+  { label: 'JK–6', value: 'jk6' },
+  { label: '7–8', value: 'grade78' },
+  { label: '9–12', value: 'secondary' },
   { label: 'All', value: 'all' },
-  { label: 'Elementary', value: 'elementary' },
-  { label: 'Secondary', value: 'secondary' },
 ];
 
 const RATING_BADGES = [

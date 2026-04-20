@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getRatingColor, getTypeLabel, toTitleCase, walkMinutes } from '../utils/school.js';
+import { MapPin, Share2 } from 'lucide-react';
 
 const SCHOOL_PHOTOS = [
   '/schools/agus-karta-VFapGvHYsp8-unsplash.jpg',
@@ -46,7 +47,15 @@ function getScoreLabel(rating) {
   return 'Low';
 }
 
-export default function SchoolPanel({ school, nearbyRentals, onClose, onRentalClick, rentalMode, onExploreRentals, onBackToOverview }) {
+// TODO: replace with Toronto Neighbourhood Equity Index or Walk Score API
+function getNeighbourhoodNote(rating) {
+  if (rating === null || rating === undefined) return null;
+  if (rating >= 7.5) return "This school sits in a well-connected neighbourhood with good access to parks, transit, and amenities.";
+  if (rating >= 5.0) return "This neighbourhood has a mix of amenities. Worth visiting before committing to a rental in this catchment.";
+  return "Check walkability and transit access for this catchment before shortlisting rentals — neighbourhood quality varies.";
+}
+
+export default function SchoolPanel({ school, nearbyRentals, onClose, onRentalClick, rentalMode, onExploreRentals, onBackToOverview, onShareClick }) {
   if (!school) return null;
 
   const props = school.properties;
@@ -57,6 +66,7 @@ export default function SchoolPanel({ school, nearbyRentals, onClose, onRentalCl
 
   const [fraserExpanded, setFraserExpanded] = useState(false);
   const [mapLoading, setMapLoading] = useState(true);
+  const explainerRef = useRef(null);
 
   useEffect(() => {
     setFraserExpanded(false);
@@ -65,22 +75,45 @@ export default function SchoolPanel({ school, nearbyRentals, onClose, onRentalCl
     return () => clearTimeout(t);
   }, [name]);
 
+  // Scroll expanded explainer into view on mobile
+  useEffect(() => {
+    if (fraserExpanded && explainerRef.current && window.innerWidth < 768) {
+      explainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [fraserExpanded]);
+
   const priceMin = hasRentals ? Math.min(...nearbyRentals.map(r => r.price)) : null;
   const priceMax = hasRentals ? Math.max(...nearbyRentals.map(r => r.price)) : null;
   const scoreLabel = getScoreLabel(rating);
+
+  // Fraser score enrichment
+  const hasRating = rating != null;
+  const barColor = !hasRating ? 'var(--mute)'
+    : rating >= 7.5 ? 'var(--green)'
+    : rating >= 5.0 ? 'var(--amber)'
+    : 'var(--red)';
+  const contextText = !hasRating ? null
+    : rating >= 7.5 ? 'Students scored above the Ontario provincial average.'
+    : rating >= 5.0 ? 'Students scored near the Ontario provincial average.'
+    : 'Students scored below the Ontario provincial average.';
+  // ELL heuristic — TODO: replace with TDSB open data enrolment figures
+  const isELLHeavy = hasRating && rating < 4.5 && (schoolType === 'EP' || schoolType === 'ES');
+  const googleQuery = encodeURIComponent(`${displayName} Toronto school reviews`);
 
   /* ── Rental list view ── */
   if (rentalMode) {
     return (
       <div className="panel school-panel">
+        {onShareClick && (
+          <button className="panel__share-btn" onClick={onShareClick} aria-label="Share">
+            <Share2 size={16} />
+          </button>
+        )}
         <div className="panel__rental-mode-header">
           <button className="panel__back-btn" onClick={onBackToOverview}>← School info</button>
           <span className="panel__rental-mode-count">{nearbyRentals.length} rental{nearbyRentals.length !== 1 ? 's' : ''}</span>
           <button className="panel__close panel__close--inline" onClick={onClose} aria-label="Close">✕</button>
         </div>
-        <button className="panel__choose-school-btn" onClick={onClose}>
-          ← Choose another school
-        </button>
         {hasRentals ? (
           <ul className="panel__rental-list">
             {nearbyRentals.map(r => (
@@ -104,9 +137,12 @@ export default function SchoolPanel({ school, nearbyRentals, onClose, onRentalCl
             ))}
           </ul>
         ) : (
-          <div className="panel__empty-rentals" style={{ padding: '16px' }}>
-            <p>No rentals found in this catchment.</p>
-            <p className="panel__empty-rentals-hint">Try widening your budget or explore a nearby school.</p>
+          <div className="sidebar__empty-state">
+            <span className="sidebar__empty-icon">🏠</span>
+            <p className="sidebar__empty-text">No rentals found inside this catchment right now.</p>
+            <button className="panel__try-nearby-btn" onClick={onClose}>
+              Try a nearby school →
+            </button>
           </div>
         )}
       </div>
@@ -117,12 +153,17 @@ export default function SchoolPanel({ school, nearbyRentals, onClose, onRentalCl
   return (
     <div className="panel school-panel">
       <button className="panel__close" onClick={onClose} aria-label="Close school panel">✕</button>
+      {onShareClick && (
+        <button className="panel__share-btn" onClick={onShareClick} aria-label="Share">
+          <Share2 size={16} />
+        </button>
+      )}
 
       <img
         src={getSchoolPhoto(props.NAME || name)}
         alt={displayName}
         className="panel__photo"
-        style={{ width: '100%', height: '180px', objectFit: 'cover', display: 'block' }}
+        style={{ width: '100%', objectFit: 'cover', display: 'block' }}
       />
 
       <div className="panel__overview-body">
@@ -142,8 +183,8 @@ export default function SchoolPanel({ school, nearbyRentals, onClose, onRentalCl
 
         {/* Fraser score card */}
         <div className="score-block">
-          <div className="score-dot" style={{ background: rating != null ? getRatingColor(rating) : '#9ca3af' }}>
-            {rating != null ? rating.toFixed(1) : '–'}
+          <div className="score-dot" style={{ background: hasRating ? getRatingColor(rating) : '#9ca3af' }}>
+            {hasRating ? rating.toFixed(1) : '–'}
           </div>
           <div className="score-meta">
             <div className="score-meta__lbl">Fraser Score</div>
@@ -155,14 +196,64 @@ export default function SchoolPanel({ school, nearbyRentals, onClose, onRentalCl
                 aria-label="What is the Fraser rating?"
               >?</button>
             </div>
-            {fraserExpanded && (
-              <div className="explainer">
-                Fraser Institute rates schools 1–10 based on academic results (standardised tests, graduation rates).
-                Useful signal, but doesn't capture school culture, extracurriculars, or community.
+
+            {hasRating && (
+              <>
+                <div className="score-bar-track">
+                  <div className="score-bar-fill" style={{ width: `${(rating / 10) * 100}%`, background: barColor }} />
+                </div>
+                <div className="score-bar-labels"><span>1</span><span>10</span></div>
+                <p className="score-context">{contextText}</p>
+              </>
+            )}
+
+            {isELLHeavy && (
+              <div className="score-ell-callout">
+                This school serves many English Language Learners. Fraser scores are known to underrank ELL-heavy schools due to methodology — not teaching quality.
               </div>
             )}
+
+            {fraserExpanded && (
+              <div className="explainer" ref={explainerRef}>
+                <ul>
+                  {[
+                    { text: 'EQAO test results in reading, writing, and math', isIn: true },
+                    { text: 'Year-over-year improvement trends', isIn: true },
+                    { text: 'School-wide participation rates', isIn: true },
+                    { text: 'Teacher quality or class sizes', isIn: false },
+                    { text: 'Safety or community feel', isIn: false },
+                    { text: 'Extracurriculars or arts programs', isIn: false },
+                    { text: 'French immersion or special program outcomes', isIn: false },
+                  ].map(({ text, isIn }) => (
+                    <li key={text} style={{ color: isIn ? 'var(--green)' : 'var(--mute)' }}>
+                      <span>{isIn ? '✓' : '✗'}</span>
+                      <span>{text}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="score-links">
+              <a className="score-link" href="https://www.tdsb.on.ca/Find-your/Schools" target="_blank" rel="noopener noreferrer">
+                TDSB school profile ↗
+              </a>
+              <a className="score-link" href={`https://www.google.com/search?q=${googleQuery}`} target="_blank" rel="noopener noreferrer">
+                Google reviews ↗
+              </a>
+            </div>
+            <p className="score-attribution">
+              Fraser Institute data, public attribution. Reviews open on Google — not affiliated.
+            </p>
           </div>
         </div>
+
+        {hasRating && (
+          <div className="panel__neighbourhood-note">
+            <MapPin className="panel__neighbourhood-note-icon" size={14} color="var(--mute)" />
+            <span>{getNeighbourhoodNote(rating)}</span>
+          </div>
+        )}
 
         {website && (
           <a className="panel__website-btn" href={website} target="_blank" rel="noopener noreferrer">
@@ -188,7 +279,9 @@ export default function SchoolPanel({ school, nearbyRentals, onClose, onRentalCl
           )}
         </div>
 
-        {/* CTA button */}
+      </div>
+
+      <div className="panel__cta-sticky">
         <button
           className={`panel__explore-btn${!hasRentals ? ' panel__explore-btn--disabled' : ''}`}
           onClick={() => hasRentals && onExploreRentals && onExploreRentals()}

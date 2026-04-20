@@ -77,26 +77,32 @@ rentalsData.forEach(rental => {
   });
 });
 
-function makeSchoolIcon(type, rating, hasRentals, isFrench) {
+// Returns dark text for light backgrounds (amber, green, orange, gray),
+// white for red (#E53935) which is the only dark-enough background.
+function markerTextColor(bg) {
+  return bg === '#E53935' ? '#fff' : '#1a1a1a';
+}
+
+function makeSchoolIcon(type, rating, hasRentals, isFrench, titleText) {
   const ratingColor = rating === null || rating === undefined ? '#9ca3af'
     : rating >= 8 ? '#4CAF50'
     : rating >= 6 ? '#FFC107'
     : rating >= 4 ? '#FF9800'
     : '#E53935';
+  const textColor = markerTextColor(ratingColor);
   const label = rating !== null && rating !== undefined ? rating.toFixed(1) : '–';
   const frBadge = isFrench
-    ? `<div style="position:absolute;top:1px;left:1px;background:#fff;color:#16a34a;
-        font-size:7px;font-weight:800;padding:1px 3px;border-radius:3px;
-        letter-spacing:0.03em;line-height:1.3;">FR</div>`
+    ? `<div style="position:absolute;bottom:-2px;right:-2px;background:#dcfce7;color:#15803d;font-size:8px;font-weight:800;padding:1px 4px;border-radius:6px;border:1.5px solid #fff;">FR</div>`
     : '';
+  const safeTitle = (titleText || '').replace(/"/g, '&quot;');
   const html = `
-    <div style="
+    <div tabindex="0" title="${safeTitle}" style="
       position:relative;
       width:54px;height:54px;border-radius:50%;
       background:${ratingColor};
       box-shadow:0 2px 8px rgba(0,0,0,0.5);
       display:flex;align-items:center;justify-content:center;
-      color:#fff;font-size:13px;font-weight:800;font-family:sans-serif;
+      color:${textColor};font-size:13px;font-weight:800;font-family:sans-serif;
       letter-spacing:-0.5px;
     ">${label}${frBadge}</div>`;
   return L.divIcon({
@@ -286,6 +292,7 @@ export default function MapView({
   onVisibleCountChange,
   onSchoolsLoaded,
   exploreRentalsMode,
+  onMapReady,
 }) {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -311,6 +318,8 @@ export default function MapView({
     )
   );
   const [schools, setSchools] = useState([]);
+  const [tileError, setTileError] = useState(false);
+  const tileErrorTimerRef = useRef(null);
 
   useEffect(() => { onSchoolClickRef.current = onSchoolClick; }, [onSchoolClick]);
 
@@ -327,12 +336,19 @@ export default function MapView({
       zoomControl: false,
     });
     L.control.zoom({ position: 'bottomright' }).addTo(map);
-    L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_nolabels/{z}/{x}/{y}.png', {
+    const tileLayer = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_nolabels/{z}/{x}/{y}.png', {
       attribution: 'Map tiles by <a href="https://carto.com/">Carto</a>, under CC BY 3.0. Data by <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, under ODbL.',
       subdomains: 'abc',
       maxZoom: 20,
-    }).addTo(map);
+    });
+    tileLayer.on('tileerror', () => {
+      setTileError(true);
+      if (tileErrorTimerRef.current) clearTimeout(tileErrorTimerRef.current);
+      tileErrorTimerRef.current = setTimeout(() => setTileError(false), 4000);
+    });
+    tileLayer.addTo(map);
     mapInstanceRef.current = map;
+    onMapReady && onMapReady(map);
 
     addLegend(map);
   }, []);
@@ -377,6 +393,8 @@ export default function MapView({
             schoolType,
             rating: fraser ? fraser.rating : null,
             website: fraser ? fraser.website : null,
+            // used for URL deep-linking — do not change existing ids
+            id: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
           };
         }).filter(Boolean);
         setSchools(features);
@@ -401,15 +419,47 @@ export default function MapView({
       maxClusterRadius: 50,
       showCoverageOnHover: false,
       iconCreateFunction: (cluster) => {
+        const markers = cluster.getAllChildMarkers();
+        const scores = markers.map(m => m.options.fraserScore ?? 0);
+        const topScore = Math.max(...scores);
         const count = cluster.getChildCount();
+        const bg = topScore >= 7.5 ? '#4CAF50' : topScore >= 5.0 ? '#FFC107' : '#E53935';
+        const clusterTextColor = markerTextColor(bg);
+        const subTextColor = bg === '#E53935' ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.5)';
+        const label = topScore > 0 ? topScore.toFixed(1) : '–';
+        const topMarker = markers.reduce((best, m) =>
+          (m.options.fraserScore ?? 0) > (best.options.fraserScore ?? 0) ? m : best
+        );
+        const topName = topMarker.options.schoolName ? toTitleCase(topMarker.options.schoolName) : '';
+        const clusterTitle = `${count} schools in this area. Highest rated: ${topName} ${topScore > 0 ? topScore.toFixed(1) : ''}`.trim().replace(/"/g, '&quot;');
         return L.divIcon({
           className: '',
-          html: `<div style="width:48px;height:48px;border-radius:50%;background:rgba(217,217,217,0.5);display:flex;align-items:center;justify-content:center;"><div style="width:32px;height:32px;border-radius:50%;background:#D9D9D9;display:flex;align-items:center;justify-content:center;color:#1a1a1a;font-size:12px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,0.2);">${count}</div></div>`,
-          iconSize: [48, 48],
-          iconAnchor: [24, 24],
+          html: `<div tabindex="0" title="${clusterTitle}" style="width:52px;height:52px;border-radius:50%;background:${bg};border:2px solid rgba(255,255,255,0.35);box-shadow:0 4px 10px -4px rgba(0,0,0,0.3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;">` +
+                `<span style="color:${clusterTextColor};font-size:13px;font-weight:700;font-family:sans-serif;line-height:1;">${label}</span>` +
+                `<span style="color:${subTextColor};font-size:10px;font-weight:500;font-family:sans-serif;line-height:1;">${count}</span>` +
+                `</div>`,
+          iconSize: [52, 52],
+          iconAnchor: [26, 26],
         });
       },
     });
+
+    clusterGroup.on('clustermouseover', (e) => {
+      const cluster = e.layer;
+      const markers = cluster.getAllChildMarkers();
+      const top = markers.reduce((best, m) =>
+        (m.options.fraserScore ?? 0) > (best.options.fraserScore ?? 0) ? m : best
+      );
+      const score = top.options.fraserScore;
+      const name = top.options.schoolName ? toTitleCase(top.options.schoolName) : '';
+      if (name && score != null) {
+        cluster.bindTooltip(`Top rated: ${name} · ${score.toFixed(1)}`, { direction: 'top', offset: [0, -8] }).openTooltip();
+      }
+    });
+    clusterGroup.on('clustermouseout', (e) => {
+      e.layer.unbindTooltip();
+    });
+
     clusterGroupRef.current = clusterGroup;
 
     let visibleSchoolCount = 0;
@@ -440,7 +490,7 @@ export default function MapView({
       if (!matchesTypeFilter(schoolType, boardFilter, languageFilter)) return;
 
       // Grade level filter
-      if (gradeLevelFilter === 'elementary' && !ELEMENTARY_TYPES.has(schoolType)) return;
+      if ((gradeLevelFilter === 'jk6' || gradeLevelFilter === 'grade78') && !ELEMENTARY_TYPES.has(schoolType)) return;
       if (gradeLevelFilter === 'secondary' && !SECONDARY_TYPES.has(schoolType)) return;
 
       // Rating filter: unrated schools always show unless we explicitly need a rating
@@ -452,8 +502,9 @@ export default function MapView({
       visibleSchoolCount++;
       const hasRentals = SCHOOLS_WITH_RENTALS.has(school.name.trim());
       const isFrench = FRENCH_TYPES.has(schoolType);
-      const marker = L.marker([lat, lng], { icon: makeSchoolIcon(schoolType, rating, hasRentals, isFrench) });
       const titleName = toTitleCase(school.name);
+      const markerTitle = `${titleName}, Fraser score ${rating != null ? rating.toFixed(1) : 'N/A'} out of 10`;
+      const marker = L.marker([lat, lng], { icon: makeSchoolIcon(schoolType, rating, hasRentals, isFrench, markerTitle), fraserScore: rating ?? 0, schoolName: school.name });
       const shortName = titleName.length > 22 ? titleName.substring(0, 20) + '…' : titleName;
       marker.bindTooltip(shortName, {
         direction: 'top',
@@ -472,6 +523,22 @@ export default function MapView({
 
     map.addLayer(clusterGroup);
     onVisibleCountChange && onVisibleCountChange(visibleSchoolCount, 0);
+
+    // Attach keyboard handlers to any markers already in the DOM (non-clustered at current zoom).
+    // Markers hidden inside clusters have no element yet; they pick up the handler when
+    // they are individually rendered (via the tabindex="0" already in the divIcon HTML).
+    requestAnimationFrame(() => {
+      schoolLayersRef.current.forEach(marker => {
+        const el = marker.getElement();
+        if (!el) return;
+        el.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            marker.fire('click');
+          }
+        });
+      });
+    });
   }, [schools, ratingMin, ratingMax, boardFilter, languageFilter, gradeLevelFilter]);
 
   // Hide school cluster while in explore-rentals mode
@@ -484,6 +551,33 @@ export default function MapView({
       if (!map.hasLayer(clusterGroupRef.current)) map.addLayer(clusterGroupRef.current);
     }
   }, [exploreRentalsMode]);
+
+  // Update catchment polygon border prominence when rental explore mode changes
+  useEffect(() => {
+    if (!catchmentLayerRef.current) return;
+    if (exploreRentalsMode) {
+      catchmentLayerRef.current.setStyle({
+        color: '#2f6b4f',
+        weight: 2.5,
+        opacity: 1,
+        fillOpacity: 0.06,
+      });
+    } else if (selectedSchool) {
+      const colors = (() => {
+        const r = selectedSchool.rating;
+        if (r === null || r === undefined) return { color: '#9ca3af', fillColor: 'rgba(128,128,128,0.08)' };
+        if (r >= 7) return { color: '#4CAF50', fillColor: 'rgba(76,175,80,0.12)' };
+        if (r >= 4) return { color: '#FFC107', fillColor: 'rgba(255,193,7,0.10)' };
+        return { color: '#E53935', fillColor: 'rgba(244,67,54,0.08)' };
+      })();
+      catchmentLayerRef.current.setStyle({
+        color: colors.color,
+        weight: 1.5,
+        opacity: 1,
+        fillOpacity: 1,
+      });
+    }
+  }, [exploreRentalsMode, selectedSchool]);
 
   // Handle selected school - draw catchment boundary
   useEffect(() => {
@@ -658,7 +752,6 @@ export default function MapView({
           fillOpacity: 0.55,
         });
       } else {
-        // No OSM footprint — draw a small circle so it's visually distinct from polygons
         layer = L.circleMarker([rental.lat, rental.lng], {
           radius: 10,
           color: RENTAL_COLOR,
@@ -667,12 +760,60 @@ export default function MapView({
           fillOpacity: 0.55,
         });
       }
-      layer.bindTooltip(`$${rental.price.toLocaleString()}/mo — ${rental.address}`, { direction: 'top' });
+
+      // Build mini-card popup
+      const distMeters = selectedSchool
+        ? haversineDistance(selectedSchool.lat, selectedSchool.lng, rental.lat, rental.lng)
+        : null;
+      const distText = distMeters === null ? ''
+        : distMeters < 1000
+        ? `${Math.round(distMeters * 1.3 / 80)} min walk`
+        : `${(distMeters / 1000).toFixed(1)}km`;
+      const typeCap = rental.type ? rental.type.charAt(0).toUpperCase() + rental.type.slice(1) : '';
+      const btnId = `rv-${rental.id}`;
+      const photoHtml = rental.imageUrl
+        ? `<img src="${rental.imageUrl}" style="width:100%;height:80px;object-fit:cover;display:block;" />`
+        : `<div style="width:100%;height:80px;background:#efefec;display:flex;align-items:center;justify-content:center;font-size:24px;">&#127968;</div>`;
+      const bedsNum = rental.bedrooms ?? rental.beds ?? '';
+      const popupHtml = `${photoHtml}<div class="rental-popup-body"><div style="font-size:15px;font-weight:700;color:#1a1a1a;">$${rental.price.toLocaleString()}/mo</div><div style="font-size:12px;color:#6b6b6b;">${bedsNum} bed · ${typeCap}</div>${distText ? `<div style="font-size:12px;color:#6b6b6b;">${distText}</div>` : ''}<a id="${btnId}" href="#" style="font-size:12px;color:#2f6b4f;font-weight:600;text-decoration:none;margin-top:4px;display:inline-block;">View details &#8594;</a></div>`;
+
+      const popup = L.popup({
+        maxWidth: 200,
+        minWidth: 180,
+        className: 'rental-popup',
+        closeButton: false,
+        offset: [0, -10],
+      }).setContent(popupHtml);
+
+      layer.bindPopup(popup);
+
+      layer.on('popupopen', () => {
+        const btn = document.getElementById(btnId);
+        if (btn && !btn.dataset.listenerAdded) {
+          btn.dataset.listenerAdded = 'true';
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            layer.closePopup();
+            clickedMarkerRef.current = true;
+            setTimeout(() => { clickedMarkerRef.current = false; }, 0);
+            onRentalClick(rental);
+          });
+        }
+      });
+
+      // Desktop: open popup on hover
+      layer.on('mouseover', () => {
+        if (window.innerWidth > 768) layer.openPopup();
+      });
+
+      // Always prevent map deselection; on mobile first tap opens popup
       layer.on('click', () => {
         clickedMarkerRef.current = true;
         setTimeout(() => { clickedMarkerRef.current = false; }, 0);
-        onRentalClick(rental);
+        if (window.innerWidth <= 768) layer.openPopup();
       });
+
       layer.addTo(map);
       rentalLayersRef.current.push(layer);
     }
@@ -818,7 +959,14 @@ export default function MapView({
     }
   }, [selectedRental, schools]);
 
-  return <div ref={mapRef} style={{ width: '100%', height: '100%' }} />;
+  return (
+    <>
+      <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
+      <div className={`map-toast${tileError ? ' map-toast--visible' : ''}`}>
+        Map tiles loading slowly — try refreshing if the map looks incomplete.
+      </div>
+    </>
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

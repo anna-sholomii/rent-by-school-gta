@@ -1,18 +1,73 @@
 import catchmentAreas from './data/catchmentAreas';
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import MapView, { haversineDistance, rentalsData } from './components/MapView';
 import SchoolPanel from './components/SchoolPanel';
 import RentalPanel from './components/RentalPanel';
 import FilterBar from './components/FilterBar';
+import SchoolList from './components/SchoolList';
 import fraserRatings from './data/fraserRatings';
 import './App.css';
+
+function RentalListView({ rentals, onRentalClick, sort, onSortChange }) {
+  const sorted = [...rentals].sort((a, b) => {
+    if (sort === 'price-asc') return a.price - b.price;
+    if (sort === 'price-desc') return b.price - a.price;
+    return (a.distance || 0) - (b.distance || 0);
+  });
+  return (
+    <div className="panel school-panel" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <div className="rental-list-sort-bar">
+        <span className="rental-list-sort-label">Sort by</span>
+        <div className="segmented-control">
+          {[
+            { label: 'Price ↑', value: 'price-asc' },
+            { label: 'Price ↓', value: 'price-desc' },
+            { label: 'Distance', value: 'distance' },
+          ].map(o => (
+            <button key={o.value} className={`segmented-btn${sort === o.value ? ' active' : ''}`} onClick={() => onSortChange(o.value)}>
+              {o.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      {sorted.length === 0 ? (
+        <div className="sidebar__empty-state">
+          <span className="sidebar__empty-icon">🏠</span>
+          <p className="sidebar__empty-text">No rentals found inside this catchment right now.</p>
+        </div>
+      ) : (
+        <ul className="panel__rental-list" style={{ padding: '8px 12px' }}>
+          {sorted.map(r => (
+            <li key={r.id} className="panel__rental-item" onClick={() => onRentalClick(r)}>
+              {r.imageUrl && <img className="panel__rental-photo" src={r.imageUrl} alt={r.address} loading="lazy" />}
+              <div className="panel__rental-body">
+                <div className="panel__rental-address">{r.address}</div>
+                <div className="panel__rental-neighbourhood">{r.neighbourhood}</div>
+                <div className="panel__rental-meta">
+                  <span className="panel__rental-price">${r.price.toLocaleString()}/mo</span>
+                  <span className="panel__rental-beds">{r.bedrooms}bd · {r.bathrooms}ba</span>
+                  <span className="panel__rental-type">{r.type}</span>
+                </div>
+                {r.distance != null && (
+                  <div className="panel__rental-distance">
+                    {r.distance < 1000 ? `~${Math.round(r.distance * 1.3 / 80)} min walk` : `${(r.distance / 1000).toFixed(1)}km`}
+                  </div>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export default function App() {
   const [ratingMin, setRatingMin] = useState(0);
   const [ratingMax, setRatingMax] = useState(10);
   const [boardFilter, setBoardFilter] = useState('all');
   const [languageFilter, setLanguageFilter] = useState('all');
-  const [gradeLevelFilter, setGradeLevelFilter] = useState('all');
+  const [gradeLevelFilter, setGradeLevelFilter] = useState('jk6');
   const [budgetMin, setBudgetMin] = useState(1500);
   const [budgetMax, setBudgetMax] = useState(5000);
   const [selectedSchool, setSelectedSchool] = useState(null);
@@ -23,6 +78,24 @@ export default function App() {
   const [schoolSearch, setSchoolSearch] = useState('');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [rentalExploreMode, setRentalExploreMode] = useState(false);
+  const [listView, setListView] = useState(false);
+  const [rentalSort, setRentalSort] = useState('price-asc');
+  const [showSchoolList, setShowSchoolList] = useState(false);
+
+  const pendingSchoolIdRef = useRef(null);
+  const pendingModeRef = useRef(null);
+  const urlInitDoneRef = useRef(false);
+  const toastTimerRef = useRef(null);
+
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastVisible, setToastVisible] = useState(false);
+
+  const showToast = useCallback((msg) => {
+    setToastMessage(msg);
+    setToastVisible(true);
+    clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToastVisible(false), 2000);
+  }, []);
 
   // Callback from MapView when schools are loaded and filters change
   const handleVisibleCountChange = useCallback((sc, rc) => {
@@ -37,8 +110,15 @@ export default function App() {
     setRentalExploreMode(false);
   }, []);
 
-  const handleExploreRentals = useCallback(() => setRentalExploreMode(true), []);
-  const handleBackToOverview = useCallback(() => setRentalExploreMode(false), []);
+  const handleExploreRentals = useCallback(() => {
+    setRentalExploreMode(true);
+    setListView(false);
+    setRentalSort('price-asc');
+  }, []);
+  const handleBackToOverview = useCallback(() => {
+    setRentalExploreMode(false);
+    setListView(false);
+  }, []);
 
   // When a rental marker is clicked — remember which school we came from
   const handleRentalClick = useCallback((rental) => {
@@ -79,7 +159,39 @@ export default function App() {
 
   const handleSchoolsLoaded = useCallback((schools) => {
     setLoadedSchools(schools);
-  }, []);
+    if (pendingSchoolIdRef.current) {
+      const pendingId = pendingSchoolIdRef.current;
+      pendingSchoolIdRef.current = null;
+      const school = schools.find(s => s.id === pendingId);
+      if (school) {
+        handleSchoolClick(school);
+        if (pendingModeRef.current === 'explore') {
+          pendingModeRef.current = null;
+          setRentalExploreMode(true);
+        }
+      }
+    }
+  }, [handleSchoolClick]);
+
+  // Mirror MapView filter logic so SchoolList shows the same set as map markers
+  const filteredSchools = useMemo(() => {
+    const ELEMENTARY = new Set(['EP', 'EC', 'FP', 'FC']);
+    const SECONDARY  = new Set(['ES', 'FS']);
+    return loadedSchools.filter(({ schoolType, rating }) => {
+      if (schoolType === 'PR') return false;
+      const isPublic   = schoolType === 'EP' || schoolType === 'FP';
+      const isCatholic = schoolType === 'EC' || schoolType === 'ES' || schoolType === 'FC' || schoolType === 'FS';
+      const isFrench   = schoolType === 'FP' || schoolType === 'FC' || schoolType === 'FS';
+      if (boardFilter === 'public'   && !isPublic)   return false;
+      if (boardFilter === 'catholic' && !isCatholic) return false;
+      if (languageFilter === 'french'  && !isFrench) return false;
+      if (languageFilter === 'english' &&  isFrench) return false;
+      if ((gradeLevelFilter === 'jk6' || gradeLevelFilter === 'grade78') && !ELEMENTARY.has(schoolType)) return false;
+      if (gradeLevelFilter === 'secondary' && !SECONDARY.has(schoolType)) return false;
+      const ratingOk = rating === null ? (ratingMin === 0) : (rating >= ratingMin && rating <= ratingMax);
+      return ratingOk;
+    });
+  }, [loadedSchools, ratingMin, ratingMax, boardFilter, languageFilter, gradeLevelFilter]);
 
   // Point-in-polygon (ray casting) — coordinates are [lng, lat] pairs
   function pointInPolygon(lat, lng, coordinates) {
@@ -95,6 +207,67 @@ export default function App() {
     return inside;
   }
 
+  // Write URL whenever relevant state changes.
+  // MUST appear before the URL parse effect so on mount this runs first (urlInitDoneRef=false) and skips.
+  useEffect(() => {
+    if (!urlInitDoneRef.current) return;
+    const params = new URLSearchParams();
+    if (selectedSchool) {
+      params.set('school', selectedSchool.id);
+    } else if (pendingSchoolIdRef.current) {
+      params.set('school', pendingSchoolIdRef.current);
+    }
+    if (boardFilter !== 'all') params.set('board', boardFilter === 'public' ? 'tdsb' : 'tcdsb');
+    if (languageFilter !== 'all') params.set('lang', languageFilter);
+    if (gradeLevelFilter !== 'jk6') {
+      params.set('grade', gradeLevelFilter === 'secondary' ? '912' : gradeLevelFilter === 'grade78' ? '78' : gradeLevelFilter);
+    }
+    if (ratingMin !== 0) params.set('minScore', String(ratingMin));
+    if (rentalExploreMode && selectedSchool) params.set('mode', 'explore');
+    const qs = params.toString();
+    window.history.replaceState(null, '', qs ? '?' + qs : window.location.pathname);
+  }, [selectedSchool, boardFilter, languageFilter, gradeLevelFilter, ratingMin, rentalExploreMode]);
+
+  // Parse URL on mount and restore filter/school state
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const board = params.get('board');
+    const lang = params.get('lang');
+    const grade = params.get('grade');
+    const minScore = params.get('minScore');
+    const schoolId = params.get('school');
+    const mode = params.get('mode');
+
+    if (board === 'tdsb') setBoardFilter('public');
+    else if (board === 'tcdsb') setBoardFilter('catholic');
+    if (lang === 'french') setLanguageFilter('french');
+    else if (lang === 'english') setLanguageFilter('english');
+    if (grade === 'jk6') setGradeLevelFilter('jk6');
+    else if (grade === '78') setGradeLevelFilter('grade78');
+    else if (grade === '912') setGradeLevelFilter('secondary');
+    else if (grade === 'all') setGradeLevelFilter('all');
+    if (minScore) setRatingMin(Number(minScore));
+    if (schoolId) pendingSchoolIdRef.current = schoolId;
+    if (mode === 'explore') pendingModeRef.current = 'explore';
+
+    urlInitDoneRef.current = true;
+  }, []);
+
+  // Share current URL — navigator.share on mobile, clipboard on desktop
+  const handleShare = useCallback(() => {
+    const url = window.location.href;
+    const title = selectedSchool
+      ? `${selectedSchool.name.replace(/\b\w/g, c => c.toUpperCase())} · Rent by School`
+      : 'Rent by School';
+    if (navigator.share && window.innerWidth <= 768) {
+      navigator.share({ title, url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        showToast('Link copied to clipboard');
+      }).catch(() => {});
+    }
+  }, [selectedSchool, showToast]);
+
   const assignedSchool = selectedRental
     ? loadedSchools.find(s => {
         const area = catchmentAreas[s.name.trim()];
@@ -104,6 +277,9 @@ export default function App() {
 
   return (
     <div className="app">
+      {/* Skip link — visually hidden until focused, for keyboard/screen-reader users */}
+      <a href="#school-list" className="skip-link">Skip to school list</a>
+
       {/* Unified left sidebar: filters + detail panel */}
       <div className={`app__sidebar${(selectedSchool || selectedRental) ? ' app__sidebar--expanded' : ''}`}>
         <FilterBar
@@ -128,7 +304,34 @@ export default function App() {
           allSchools={loadedSchools}
           onSchoolSelect={handleSchoolClick}
         />
-        {selectedSchool && (
+        {/* Desktop: Map ↔ Schools list toggle (hidden when a panel is open) */}
+        {!selectedSchool && !selectedRental && (
+          <div className="sidebar-view-toggle" role="group" aria-label="View mode">
+            <button
+              className={`segmented-btn${!showSchoolList ? ' active' : ''}`}
+              onClick={() => setShowSchoolList(false)}
+              aria-pressed={!showSchoolList}
+            >
+              Map
+            </button>
+            <button
+              className={`segmented-btn${showSchoolList ? ' active' : ''}`}
+              onClick={() => setShowSchoolList(true)}
+              aria-pressed={showSchoolList}
+            >
+              Schools list
+            </button>
+          </div>
+        )}
+
+        {selectedSchool && rentalExploreMode && listView ? (
+          <RentalListView
+            rentals={nearbyRentals}
+            onRentalClick={handleRentalClick}
+            sort={rentalSort}
+            onSortChange={setRentalSort}
+          />
+        ) : selectedSchool && (
           <SchoolPanel
             school={selectedSchool}
             nearbyRentals={nearbyRentals}
@@ -137,6 +340,7 @@ export default function App() {
             rentalMode={rentalExploreMode}
             onExploreRentals={handleExploreRentals}
             onBackToOverview={handleBackToOverview}
+            onShareClick={handleShare}
           />
         )}
         {selectedRental && (
@@ -149,7 +353,10 @@ export default function App() {
             onBackToSchool={handleBackToSchool}
           />
         )}
-        {!selectedSchool && !selectedRental && (
+        {!selectedSchool && !selectedRental && showSchoolList && (
+          <SchoolList schools={filteredSchools} onSchoolSelect={handleSchoolClick} />
+        )}
+        {!selectedSchool && !selectedRental && !showSchoolList && (
           <div className="sidebar__empty-state">
             <span className="sidebar__empty-icon">🏫</span>
             <p className="sidebar__empty-text">Click a school pin to see nearby rentals in its catchment</p>
@@ -166,6 +373,14 @@ export default function App() {
             onClick={() => setMobileFiltersOpen(o => !o)}
           >
             School filters {mobileFiltersOpen ? '▴' : '▾'}
+          </button>
+          <button
+            className={`mtf-pill${showSchoolList ? ' mtf-pill--active' : ''}`}
+            onClick={() => setShowSchoolList(v => !v)}
+            aria-pressed={showSchoolList}
+            aria-label="Toggle school list"
+          >
+            ☰ Schools
           </button>
         </div>
 
@@ -269,13 +484,18 @@ export default function App() {
             <div className="mtf-section">
               <div className="mtf-section-label">LEVEL</div>
               <div className="mtf-options">
-                {['all', 'elementary', 'secondary'].map(v => (
+                {[
+                  { label: 'JK–6', value: 'jk6' },
+                  { label: '7–8', value: 'grade78' },
+                  { label: '9–12', value: 'secondary' },
+                  { label: 'All', value: 'all' },
+                ].map(({ label, value }) => (
                   <button
-                    key={v}
-                    className={`mtf-option${gradeLevelFilter === v ? ' mtf-option--active' : ''}`}
-                    onClick={() => setGradeLevelFilter(v)}
+                    key={value}
+                    className={`mtf-option${gradeLevelFilter === value ? ' mtf-option--active' : ''}`}
+                    onClick={() => setGradeLevelFilter(value)}
                   >
-                    {v === 'all' ? 'All' : v.charAt(0).toUpperCase() + v.slice(1)}
+                    {label}
                   </button>
                 ))}
               </div>
@@ -309,6 +529,36 @@ export default function App() {
             </button>
           </div>
         )}
+        {/* View toggle — only visible in rental explore mode */}
+        {rentalExploreMode && (
+          <div className="view-toggle">
+            <button
+              className={`view-toggle__btn${!listView ? ' view-toggle__btn--active' : ''}`}
+              onClick={() => setListView(false)}
+            >
+              Map
+            </button>
+            <button
+              className={`view-toggle__btn${listView ? ' view-toggle__btn--active' : ''}`}
+              onClick={() => setListView(true)}
+            >
+              List
+            </button>
+          </div>
+        )}
+
+        {/* Mobile list overlay */}
+        {rentalExploreMode && listView && selectedSchool && (
+          <div className="rental-list-view-mobile">
+            <RentalListView
+              rentals={nearbyRentals}
+              onRentalClick={handleRentalClick}
+              sort={rentalSort}
+              onSortChange={setRentalSort}
+            />
+          </div>
+        )}
+
         <MapView
           ratingMin={ratingMin}
           ratingMax={ratingMax}
@@ -325,6 +575,10 @@ export default function App() {
           onSchoolsLoaded={handleSchoolsLoaded}
           exploreRentalsMode={rentalExploreMode}
         />
+      </div>
+      {/* Toast notification */}
+      <div className={`map-toast${toastVisible ? ' map-toast--visible' : ''}`}>
+        {toastMessage}
       </div>
     </div>
   );

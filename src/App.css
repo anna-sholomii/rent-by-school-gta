@@ -201,14 +201,14 @@
   align-items: center;
   gap: 12px;
   padding: 18px 16px 16px;
-  background: var(--ink);
-  border-bottom: none;
+  background: var(--card);
+  border-bottom: 0.5px solid var(--line);
 }
 
 .sidebar-logo-icon {
   width: 36px;
   height: 36px;
-  background: rgba(255,255,255,0.12);
+  background: var(--line-2);
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -220,14 +220,14 @@
 .sidebar-title {
   font-size: 15px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--ink);
   line-height: 1.2;
   letter-spacing: -0.01em;
 }
 
 .sidebar-subtitle {
   font-size: 11px;
-  color: rgba(255,255,255,0.5);
+  color: var(--mute);
   margin-top: 2px;
 }
 
@@ -505,6 +505,30 @@
 .panel__close:hover {
   background: #e2e8f0;
   color: #1e293b;
+}
+
+.panel__share-btn {
+  position: absolute;
+  top: 12px;
+  right: 44px;
+  background: var(--line-2);
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--mute);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: background 0.15s;
+}
+
+.panel__share-btn:hover {
+  background: var(--line);
+  color: var(--ink);
 }
 
 .panel__photo {
@@ -1195,6 +1219,108 @@
 /* Keep old class names inert so nothing breaks */
 .panel__fraser-note { display: none; }
 .panel__fraser-note--visible { display: none; }
+
+/* ==============================
+   Fraser Score Block — extensions
+   ============================== */
+
+/* Score bar */
+.score-bar-track {
+  height: 5px;
+  background: var(--line);
+  border-radius: 3px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+.score-bar-fill {
+  height: 5px;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+.score-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--mute);
+  margin-top: 3px;
+}
+
+/* Context sentence */
+.score-context {
+  font-size: 12px;
+  color: var(--mute);
+  line-height: 1.4;
+  margin-top: 6px;
+}
+
+/* ELL callout */
+.score-ell-callout {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: #fffbeb;
+  border-left: 3px solid var(--amber);
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+/* Explainer list */
+.explainer ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.explainer li {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  min-height: 28px;
+  align-items: center;
+  line-height: 1.4;
+}
+
+/* Touch target for "?" header row */
+.score-meta__hdr {
+  min-height: 44px;
+}
+
+/* Links row */
+.score-links {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+  min-height: 44px;
+  align-items: center;
+}
+.score-link {
+  font-size: 12px;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+.score-link:hover { text-decoration: underline; }
+
+/* Attribution line */
+.score-attribution {
+  font-size: 10px;
+  color: var(--mute);
+  font-style: italic;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* Sticky CTA wrapper (mobile) */
+.panel__cta-sticky {
+  position: sticky;
+  bottom: 0;
+  background: var(--card);
+  padding: 12px 16px;
+  border-top: 0.5px solid var(--line);
+}
 .panel__fraser-toggle { display: none; }
 
 /* French school badge */
@@ -1448,7 +1574,7 @@
   .app {
     position: relative;
     overflow: hidden;
-    flex-direction: row; /* map fills the space, sidebar overlays */
+    flex-direction: row;
   }
 
   .app__map {
@@ -1459,7 +1585,7 @@
     order: unset;
   }
 
-  /* Bottom sheet — hidden until school/rental selected */
+  /* Base sheet — collapsed (max-height: 0) */
   .app__sidebar {
     position: absolute;
     bottom: 0;
@@ -1469,8 +1595,6 @@
     min-width: unset;
     border-right: none;
     border-top: none;
-    border-radius: 20px 20px 0 0;
-    box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.22);
     background: var(--bg);
     z-index: 1001;
     order: unset;
@@ -1479,27 +1603,59 @@
     transition: max-height 0.38s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Drag handle — overlaid on top of photo, no layout space */
-  .app__sidebar--expanded::before {
-    content: '';
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 36px;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.7);
-    border-radius: 2px;
-    z-index: 20;
+  /* PEEK state — school name + score + CTA visible */
+  .app__sidebar--peek {
+    max-height: 42vh;
+    overflow: hidden;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.22);
+    transition: max-height 0.38s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Expanded: school or rental selected */
+  /* FULL state — full detail, scrollable */
+  .app__sidebar--full {
+    max-height: 82vh;
+    overflow-y: auto;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.22);
+    transition: max-height 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Alias — keeps any existing references working */
   .app__sidebar--expanded {
     max-height: 82vh;
     overflow-y: auto;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.22);
   }
 
-  /* Hide logo, search, filters and empty state — not needed in bottom sheet */
+  /* Real drag handle div (replaces ::before) */
+  .sheet-drag-handle {
+    width: 36px;
+    height: 4px;
+    background: rgba(0, 0, 0, 0.18);
+    border-radius: 2px;
+    margin: 12px auto 4px;
+    flex-shrink: 0;
+    cursor: grab;
+    touch-action: none;
+  }
+
+  /* CTA pinned to bottom of sheet in PEEK state */
+  .app__sidebar--peek .panel__cta-sticky {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 5;
+  }
+
+  /* Photo height on mobile */
+  .panel__photo {
+    height: 110px !important;
+  }
+
+  /* Hide logo, search, filters and empty state */
   .sidebar-logo-row,
   .sidebar-search-wrap,
   .sidebar-filters-header,
@@ -1517,6 +1673,96 @@
   /* Panel fills sheet */
   .panel {
     min-height: unset;
+  }
+}
+
+/* Desktop: hide drag handle */
+@media (min-width: 769px) {
+  .sheet-drag-handle { display: none; }
+}
+
+/* Map tap overlay — covers map above the peek sheet */
+.sheet-map-tap-target {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 42vh;
+  z-index: 1000;
+  background: transparent;
+}
+
+/* ==============================
+   Catchment Chip (rental explore mode)
+   ============================== */
+.catchment-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.95);
+  border: 1px solid rgba(0,0,0,0.10);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  font-family: inherit;
+  pointer-events: none;
+}
+
+.catchment-chip__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.catchment-chip__label {
+  white-space: nowrap;
+}
+
+@media (max-width: 767px) {
+  .catchment-chip__label {
+    max-width: calc(100vw - 48px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* ==============================
+   Choose Another School FAB
+   ============================== */
+.choose-school-fab {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1002;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.choose-school-fab:hover {
+  background: var(--line-2);
+}
+
+@media (max-width: 767px) {
+  .choose-school-fab--rental-open {
+    bottom: 100px;
   }
 }
 
@@ -1621,4 +1867,185 @@
 /* Dark overlay with spotlight cutout */
 .shepherd-modal-overlay-container {
   fill: rgba(0, 0, 0, 0.55);
+}
+
+/* ==============================
+   Change 1 — Neighbourhood note
+   ============================== */
+.panel__neighbourhood-note {
+  margin: 10px 16px 0;
+  padding: 10px 12px;
+  background: var(--line-2);
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.panel__neighbourhood-note-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ==============================
+   Change 2 — Rental pin popup
+   ============================== */
+.rental-popup .leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  border: 0.5px solid var(--line);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.14);
+  padding: 0;
+  overflow: hidden;
+}
+
+.rental-popup .leaflet-popup-content {
+  margin: 0;
+  width: 180px !important;
+}
+
+.rental-popup .leaflet-popup-tip-container {
+  display: none;
+}
+
+.rental-popup-body {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ==============================
+   Change 3 — View toggle (Map / List)
+   ============================== */
+.view-toggle {
+  position: absolute;
+  top: 56px;
+  right: 12px;
+  z-index: 1000;
+  display: flex;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.12);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.12);
+}
+
+.view-toggle__btn {
+  height: 36px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: rgba(255,255,255,0.95);
+  color: var(--mute);
+  transition: background 0.15s, color 0.15s;
+}
+
+.view-toggle__btn--active {
+  background: var(--ink);
+  color: #fff;
+}
+
+.rental-list-view-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .rental-list-view-mobile {
+    display: block;
+    position: absolute;
+    top: 56px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 999;
+    background: var(--card);
+    overflow-y: auto;
+  }
+}
+
+.rental-list-sort-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 0.5px solid var(--line);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.rental-list-sort-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mute);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+/* ==============================
+   Change 6 — Map tile error toast
+   ============================== */
+.map-toast {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1100;
+  background: var(--ink);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 999px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.map-toast--visible {
+  opacity: 1;
+}
+
+.panel__try-nearby-btn {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  margin-top: 8px;
+  display: inline-block;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+}
+
+/* ==============================
+   Map Toast (share / clipboard)
+   ============================== */
+.map-toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+
+.map-toast--visible {
+  opacity: 1;
 }
