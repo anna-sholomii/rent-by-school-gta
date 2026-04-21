@@ -448,6 +448,118 @@ const catchmentAreas = {
     ]],
   },
 
+  // ── French Public Schools — CSC Viamonde (FP) ──────────────────────────────
+
+  // 14 Pembroke St — Church & Carlton area
+  "ECOLE ELEMENTAIRE GABRIELLE ROY": {
+    board: "csc_viamonde",
+    coordinates: [[
+      [-79.3722, 43.6552],
+      [-79.3722, 43.6624],
+      [-79.3622, 43.6624],
+      [-79.3622, 43.6552],
+      [-79.3722, 43.6552],
+    ]],
+  },
+
+  // 55 Pelham Ave — Dufferin & Bloor area
+  "ECOLE ELEMENTAIRE CHARLES SAURIOL": {
+    board: "csc_viamonde",
+    coordinates: [[
+      [-79.4317, 43.6504],
+      [-79.4317, 43.6576],
+      [-79.4217, 43.6576],
+      [-79.4217, 43.6504],
+      [-79.4317, 43.6504],
+    ]],
+  },
+
+  // 65 Grace St — Bathurst & College area
+  "ECOLE ELEMENTAIRE PIERRE ELLIOTT TRUDEAU": {
+    board: "csc_viamonde",
+    coordinates: [[
+      [-79.4127, 43.6534],
+      [-79.4127, 43.6606],
+      [-79.4027, 43.6606],
+      [-79.4027, 43.6534],
+      [-79.4127, 43.6534],
+    ]],
+  },
+
+  // 300 Banbury Rd — Don Mills & Lawrence area
+  "ECOLE SECONDAIRE ETIENNE BRULE": {
+    board: "csc_viamonde",
+    coordinates: [[
+      [-79.3515, 43.7202],
+      [-79.3515, 43.7274],
+      [-79.3415, 43.7274],
+      [-79.3415, 43.7202],
+      [-79.3515, 43.7202],
+    ]],
+  },
+
+  // 100 Ravel Rd — North York / Bathurst & Wilson
+  "ECOLE ELEMENTAIRE FELIX LECLERC": {
+    board: "csc_viamonde",
+    coordinates: [[
+      [-79.4438, 43.7306],
+      [-79.4438, 43.7378],
+      [-79.4338, 43.7378],
+      [-79.4338, 43.7306],
+      [-79.4438, 43.7306],
+    ]],
+  },
+
+  // ── French Catholic Schools — CSC MonAvenir (FS) ────────────────────────────
+
+  // 98 Essex St — Church & Carlton area
+  "SACRE COEUR CATHOLIC ELEMENTARY SCHOOL": {
+    board: "csc_catholique",
+    coordinates: [[
+      [-79.3753, 43.6539],
+      [-79.3753, 43.6611],
+      [-79.3653, 43.6611],
+      [-79.3653, 43.6539],
+      [-79.3753, 43.6539],
+    ]],
+  },
+
+  // 755 Royal York Rd — Mimico / Islington area
+  "ST MARGUERITE D'YOUVILLE CATHOLIC ELEMENTARY SCHOOL": {
+    board: "csc_catholique",
+    coordinates: [[
+      [-79.5162, 43.6201],
+      [-79.5162, 43.6273],
+      [-79.5062, 43.6273],
+      [-79.5062, 43.6201],
+      [-79.5162, 43.6201],
+    ]],
+  },
+
+  // 110 Drewry Ave — North York / Willowdale
+  "MONSEIGNEUR DE CHARBONNEL CATHOLIC SECONDARY SCHOOL": {
+    board: "csc_catholique",
+    coordinates: [[
+      [-79.4170, 43.7796],
+      [-79.4170, 43.7868],
+      [-79.4070, 43.7868],
+      [-79.4070, 43.7796],
+      [-79.4170, 43.7796],
+    ]],
+  },
+
+  // 250 Gainsborough Rd — Scarborough / Warden area
+  "GEORGES ETIENNE CARTIER CATHOLIC ELEMENTARY SCHOOL": {
+    board: "csc_catholique",
+    coordinates: [[
+      [-79.2843, 43.7426],
+      [-79.2843, 43.7498],
+      [-79.2743, 43.7498],
+      [-79.2743, 43.7426],
+      [-79.2843, 43.7426],
+    ]],
+  },
+
 };
 
 export default catchmentAreas;

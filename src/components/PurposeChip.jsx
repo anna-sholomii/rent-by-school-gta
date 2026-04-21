@@ -72,6 +72,7 @@ export default function PurposeChip() {
       <div
         role="region"
         aria-label="App purpose"
+        className="purpose-chip"
         style={{
           position: 'absolute',
           top: 12,

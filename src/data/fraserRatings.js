@@ -104,6 +104,22 @@ const fraserRatings = {
   "Nelson Mandela Park": { rating: 1.6, board: "EP", rank: "2999/3052" },
   "General Mercer": { rating: 1.5, board: "EP", rank: "3003/3052" },
 
+  // ── French Public Schools — CSC Viamonde (FP) ──────────────────────────────
+  "ECOLE ELEMENTAIRE GABRIELLE ROY":                       { rating: 8.9, board: "FP" },
+  "ECOLE ELEMENTAIRE CHARLES SAURIOL":                     { rating: 9.1, board: "FP" },
+  "ECOLE ELEMENTAIRE PIERRE ELLIOTT TRUDEAU":              { rating: 6.8, board: "FP" },
+  "ECOLE SECONDAIRE ETIENNE BRULE":                        { rating: 7.4, board: "FP" },
+  "ACADEMIE ALEXANDRE DUMAS":                              { rating: 7.2, board: "FP" },
+  "ECOLE ELEMENTAIRE FELIX LECLERC":                       { rating: 7.6, board: "FP" },
+  "ECOLE ELEMENTAIRE LA MOSAIQUE":                         { rating: 7.0, board: "FP" },
+
+  // ── French Catholic Schools — CSC MonAvenir (FS) ────────────────────────────
+  "SACRE COEUR CATHOLIC ELEMENTARY SCHOOL":                { rating: 6.8, board: "FS" },
+  "ST MARGUERITE D'YOUVILLE CATHOLIC ELEMENTARY SCHOOL":   { rating: 7.2, board: "FS" },
+  "MONSEIGNEUR DE CHARBONNEL CATHOLIC SECONDARY SCHOOL":   { rating: 7.5, board: "FS" },
+  "GEORGES ETIENNE CARTIER CATHOLIC ELEMENTARY SCHOOL":    { rating: 7.7, board: "FS" },
+  "ST NOEL CHABANEL CATHOLIC ELEMENTARY SCHOOL":           { rating: 6.5, board: "FS" },
+
   // ── Direct overrides for the 40 app schools (spread across all rating tiers) ─
 
   // Public — Excellent (8–10)

@@ -26,18 +26,15 @@ const RATING_BADGES = [
   { label: '<4 Low',         min: 0, max: 4,  color: '#b71c1c', bg: '#fce8e6' },
 ];
 
-const BUDGET_MIN = 1500;
-const BUDGET_MAX = 5000;
-
 export default function FilterBar({
   ratingMin, ratingMax, onRatingMinChange, onRatingMaxChange,
   boardFilter, onBoardFilterChange,
   languageFilter, onLanguageFilterChange,
   gradeLevelFilter, onGradeLevelChange,
-  budgetMin, budgetMax, onBudgetMinChange, onBudgetMaxChange,
   selectedSchool, nearbyRentalCount,
   schoolSearch, onSchoolSearchChange,
   allSchools, onSchoolSelect,
+  onResetFilters,
 }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(true);
@@ -66,8 +63,6 @@ export default function FilterBar({
 
   const minPct = (ratingMin / 10) * 100;
   const maxPct = (ratingMax / 10) * 100;
-  const budgetMinPct = ((budgetMin - BUDGET_MIN) / (BUDGET_MAX - BUDGET_MIN)) * 100;
-  const budgetMaxPct = ((budgetMax - BUDGET_MIN) / (BUDGET_MAX - BUDGET_MIN)) * 100;
 
   // Count how many filter groups are non-default
   const activeFilterCount = [
@@ -75,7 +70,6 @@ export default function FilterBar({
     boardFilter !== 'all',
     languageFilter !== 'all',
     gradeLevelFilter !== 'all',
-    budgetMin !== BUDGET_MIN || budgetMax !== BUDGET_MAX,
   ].filter(Boolean).length;
 
   return (
@@ -114,35 +108,24 @@ export default function FilterBar({
       {/* Filters section */}
       <div className="sidebar-filters-header" onClick={() => setFiltersOpen(o => !o)}>
         <span className="sidebar-filters-icon">⚙</span>
-        <span className="sidebar-filters-label">FILTERS</span>
+        <span className="sidebar-filters-label">SCHOOL FILTERS</span>
         {!filtersOpen && activeFilterCount > 0 && (
           <span className="sidebar-filters-active-count">{activeFilterCount} active</span>
+        )}
+        {activeFilterCount > 0 && onResetFilters && (
+          <button
+            className="sidebar-filters-reset"
+            onClick={e => { e.stopPropagation(); onResetFilters(); }}
+            aria-label="Reset all filters"
+          >
+            Reset
+          </button>
         )}
         <span className="sidebar-filters-caret">{filtersOpen ? '∧' : '∨'}</span>
       </div>
 
       {filtersOpen && (
         <div className="sidebar-filters-body">
-
-          {/* Budget — first, most important for renters */}
-          <div className="sidebar-section">
-            <div className="sidebar-section-header">
-              <span className="sidebar-section-label">BUDGET FOR RENT</span>
-              <span className="sidebar-rating-value">${budgetMin.toLocaleString()} – ${budgetMax.toLocaleString()}</span>
-            </div>
-            <div className="dual-slider">
-              <div className="dual-slider__track">
-                <div className="dual-slider__fill" style={{ left: `${budgetMinPct}%`, right: `${100 - budgetMaxPct}%` }} />
-              </div>
-              <input type="range" min={BUDGET_MIN} max={BUDGET_MAX} step={100} value={budgetMin}
-                onChange={e => onBudgetMinChange(Math.min(Number(e.target.value), budgetMax - 100))}
-                className="dual-slider__input" />
-              <input type="range" min={BUDGET_MIN} max={BUDGET_MAX} step={100} value={budgetMax}
-                onChange={e => onBudgetMaxChange(Math.max(Number(e.target.value), budgetMin + 100))}
-                className="dual-slider__input" />
-            </div>
-            <div className="dual-slider__labels"><span>$1,500</span><span>$3,250</span><span>$5,000</span></div>
-          </div>
 
           {/* Rating */}
           <div className="sidebar-section">
@@ -171,7 +154,7 @@ export default function FilterBar({
                 <button
                   key={b.label}
                   className="rating-badge"
-                  style={{ color: b.color, background: b.bg, border: `1px solid ${b.color}33` }}
+                  style={{ color: b.color, background: 'transparent', border: `1px solid ${b.color}` }}
                   onClick={() => { onRatingMinChange(b.min); onRatingMaxChange(b.max); }}
                 >
                   {b.label}

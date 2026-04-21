@@ -5,6 +5,7 @@ import SchoolPanel from './components/SchoolPanel';
 import RentalPanel from './components/RentalPanel';
 import FilterBar from './components/FilterBar';
 import SchoolList from './components/SchoolList';
+import PurposeChip from './components/PurposeChip';
 import fraserRatings from './data/fraserRatings';
 import './App.css';
 
@@ -175,7 +176,7 @@ export default function App() {
 
   // Mirror MapView filter logic so SchoolList shows the same set as map markers
   const filteredSchools = useMemo(() => {
-    const ELEMENTARY = new Set(['EP', 'EC', 'FP', 'FC']);
+    const ELEMENTARY = new Set(['EP', 'EC', 'FP', 'FC', 'FS']); // FS = French Catholic (many are elementary in Toronto)
     const SECONDARY  = new Set(['ES', 'FS']);
     return loadedSchools.filter(({ schoolType, rating }) => {
       if (schoolType === 'PR') return false;
@@ -293,79 +294,89 @@ export default function App() {
           onLanguageFilterChange={setLanguageFilter}
           gradeLevelFilter={gradeLevelFilter}
           onGradeLevelChange={setGradeLevelFilter}
-          budgetMin={budgetMin}
-          budgetMax={budgetMax}
-          onBudgetMinChange={setBudgetMin}
-          onBudgetMaxChange={setBudgetMax}
           selectedSchool={selectedSchool}
           nearbyRentalCount={nearbyRentals.length}
           schoolSearch={schoolSearch}
           onSchoolSearchChange={setSchoolSearch}
           allSchools={loadedSchools}
           onSchoolSelect={handleSchoolClick}
+          onResetFilters={() => {
+            setRatingMin(0); setRatingMax(10);
+            setBoardFilter('all'); setLanguageFilter('all'); setGradeLevelFilter('jk6');
+          }}
         />
-        {/* Desktop: Map ↔ Schools list toggle (hidden when a panel is open) */}
-        {!selectedSchool && !selectedRental && (
-          <div className="sidebar-view-toggle" role="group" aria-label="View mode">
-            <button
-              className={`segmented-btn${!showSchoolList ? ' active' : ''}`}
-              onClick={() => setShowSchoolList(false)}
-              aria-pressed={!showSchoolList}
-            >
-              Map
-            </button>
-            <button
-              className={`segmented-btn${showSchoolList ? ' active' : ''}`}
-              onClick={() => setShowSchoolList(true)}
-              aria-pressed={showSchoolList}
-            >
-              Schools list
-            </button>
-          </div>
-        )}
+        {/* Scrollable content area below the fixed filter bar */}
+        <div className="app__sidebar-content">
+          {/* Desktop: Map ↔ Schools list toggle (hidden when a panel is open) */}
+          {!selectedSchool && !selectedRental && (
+            <div className="sidebar-view-toggle" role="group" aria-label="View mode">
+              <button
+                className={`segmented-btn${!showSchoolList ? ' active' : ''}`}
+                onClick={() => setShowSchoolList(false)}
+                aria-pressed={!showSchoolList}
+              >
+                Map
+              </button>
+              <button
+                className={`segmented-btn${showSchoolList ? ' active' : ''}`}
+                onClick={() => setShowSchoolList(true)}
+                aria-pressed={showSchoolList}
+              >
+                Schools list
+              </button>
+            </div>
+          )}
 
-        {selectedSchool && rentalExploreMode && listView ? (
-          <RentalListView
-            rentals={nearbyRentals}
-            onRentalClick={handleRentalClick}
-            sort={rentalSort}
-            onSortChange={setRentalSort}
-          />
-        ) : selectedSchool && (
-          <SchoolPanel
-            school={selectedSchool}
-            nearbyRentals={nearbyRentals}
-            onClose={() => { setSelectedSchool(null); setRentalExploreMode(false); }}
-            onRentalClick={handleRentalClick}
-            rentalMode={rentalExploreMode}
-            onExploreRentals={handleExploreRentals}
-            onBackToOverview={handleBackToOverview}
-            onShareClick={handleShare}
-          />
-        )}
-        {selectedRental && (
-          <RentalPanel
-            rental={selectedRental}
-            assignedSchool={assignedSchool}
-            previousSchool={previousSchool}
-            onClose={() => { setSelectedRental(null); setPreviousSchool(null); }}
-            onSchoolClick={handleSchoolClick}
-            onBackToSchool={handleBackToSchool}
-          />
-        )}
-        {!selectedSchool && !selectedRental && showSchoolList && (
-          <SchoolList schools={filteredSchools} onSchoolSelect={handleSchoolClick} />
-        )}
-        {!selectedSchool && !selectedRental && !showSchoolList && (
-          <div className="sidebar__empty-state">
-            <span className="sidebar__empty-icon">🏫</span>
-            <p className="sidebar__empty-text">Click a school pin to see nearby rentals in its catchment</p>
-          </div>
-        )}
+          {selectedSchool && rentalExploreMode && listView ? (
+            <RentalListView
+              rentals={nearbyRentals}
+              onRentalClick={handleRentalClick}
+              sort={rentalSort}
+              onSortChange={setRentalSort}
+            />
+          ) : selectedSchool && (
+            <SchoolPanel
+              school={selectedSchool}
+              nearbyRentals={nearbyRentals}
+              onClose={() => { setSelectedSchool(null); setRentalExploreMode(false); }}
+              onRentalClick={handleRentalClick}
+              rentalMode={rentalExploreMode}
+              onExploreRentals={handleExploreRentals}
+              onBackToOverview={handleBackToOverview}
+              onShareClick={handleShare}
+              budgetMin={budgetMin}
+              budgetMax={budgetMax}
+              onBudgetMinChange={setBudgetMin}
+              onBudgetMaxChange={setBudgetMax}
+            />
+          )}
+          {selectedRental && (
+            <RentalPanel
+              rental={selectedRental}
+              assignedSchool={assignedSchool}
+              previousSchool={previousSchool}
+              onClose={() => { setSelectedRental(null); setPreviousSchool(null); }}
+              onSchoolClick={handleSchoolClick}
+              onBackToSchool={handleBackToSchool}
+            />
+          )}
+          {!selectedSchool && !selectedRental && showSchoolList && (
+            <SchoolList schools={filteredSchools} onSchoolSelect={handleSchoolClick} />
+          )}
+          {!selectedSchool && !selectedRental && !showSchoolList && (
+            <div className="sidebar__empty-state">
+              <span className="sidebar__empty-icon">🏫</span>
+              <p className="sidebar__empty-text">Click a school pin to see nearby rentals in its catchment</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Map */}
       <div className="app__map">
+        {/* "How it works" chip — always visible on map */}
+        <PurposeChip />
+
         {/* Mobile filter bar — only visible on ≤768px */}
         <div className="mobile-top-filters">
           <button
@@ -423,29 +434,6 @@ export default function App() {
                     ))}
                 </ul>
               )}
-            </div>
-
-            {/* Budget */}
-            <div className="mtf-section">
-              <div className="mtf-section-header">
-                <div className="mtf-section-label">BUDGET</div>
-                <span className="mtf-rating-value">${budgetMin.toLocaleString()} – ${budgetMax.toLocaleString()}</span>
-              </div>
-              <div className="dual-slider">
-                <div className="dual-slider__track">
-                  <div className="dual-slider__fill" style={{
-                    left: `${((budgetMin - 1500) / 3500) * 100}%`,
-                    right: `${100 - ((budgetMax - 1500) / 3500) * 100}%`
-                  }} />
-                </div>
-                <input type="range" min={1500} max={5000} step={100} value={budgetMin}
-                  onChange={e => setBudgetMin(Math.min(Number(e.target.value), budgetMax - 100))}
-                  className="dual-slider__input" />
-                <input type="range" min={1500} max={5000} step={100} value={budgetMax}
-                  onChange={e => setBudgetMax(Math.max(Number(e.target.value), budgetMin + 100))}
-                  className="dual-slider__input" />
-              </div>
-              <div className="dual-slider__labels"><span>$1,500</span><span>$3,250</span><span>$5,000</span></div>
             </div>
 
             {/* Board */}
@@ -524,9 +512,23 @@ export default function App() {
               <div className="dual-slider__labels"><span>1</span><span>5</span><span>10</span></div>
             </div>
 
-            <button className="mtf-done-btn" onClick={() => setMobileFiltersOpen(false)}>
-              Done
-            </button>
+            {/* Footer buttons */}
+            <div className="mtf-footer-row">
+              {(boardFilter !== 'all' || languageFilter !== 'all' || gradeLevelFilter !== 'jk6' || ratingMin !== 0 || ratingMax !== 10) && (
+                <button
+                  className="mtf-reset-btn"
+                  onClick={() => {
+                    setBoardFilter('all'); setLanguageFilter('all');
+                    setGradeLevelFilter('jk6'); setRatingMin(0); setRatingMax(10);
+                  }}
+                >
+                  Reset filters
+                </button>
+              )}
+              <button className="mtf-done-btn" onClick={() => setMobileFiltersOpen(false)}>
+                Done
+              </button>
+            </div>
           </div>
         )}
         {/* View toggle — only visible in rental explore mode */}

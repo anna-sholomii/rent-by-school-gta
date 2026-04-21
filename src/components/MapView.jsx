@@ -282,7 +282,8 @@ function getBoundaryColor(feature) {
 
 const FRENCH_TYPES = new Set(['FP', 'FC', 'FS']);
 const SECONDARY_TYPES = new Set(['ES', 'FS']);
-const ELEMENTARY_TYPES = new Set(['EP', 'EC', 'FP', 'FC']);
+// FS covers French Catholic schools — many are elementary in Toronto's GeoJSON
+const ELEMENTARY_TYPES = new Set(['EP', 'EC', 'FP', 'FC', 'FS']);
 
 export default function MapView({
   ratingMin, ratingMax, boardFilter, languageFilter, gradeLevelFilter,
@@ -334,10 +335,17 @@ export default function MapView({
       center: [43.7, -79.4],
       zoom: 12,
       zoomControl: false,
+      attributionControl: false, // we place it manually to avoid mobile bottom-sheet overlap
     });
     L.control.zoom({ position: 'bottomright' }).addTo(map);
+    // Attribution at topright so it never overlaps the mobile bottom sheet
+    L.control.attribution({ position: 'topright', prefix: false })
+      .addAttribution(
+        'Map tiles by <a href="https://carto.com/">Carto</a>, under CC BY 3.0. ' +
+        'Data by <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, under ODbL.'
+      )
+      .addTo(map);
     const tileLayer = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_nolabels/{z}/{x}/{y}.png', {
-      attribution: 'Map tiles by <a href="https://carto.com/">Carto</a>, under CC BY 3.0. Data by <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, under ODbL.',
       subdomains: 'abc',
       maxZoom: 20,
     });

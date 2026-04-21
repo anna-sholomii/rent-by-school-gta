@@ -55,7 +55,15 @@ function getNeighbourhoodNote(rating) {
   return "Check walkability and transit access for this catchment before shortlisting rentals — neighbourhood quality varies.";
 }
 
-export default function SchoolPanel({ school, nearbyRentals, onClose, onRentalClick, rentalMode, onExploreRentals, onBackToOverview, onShareClick }) {
+const BUDGET_MIN = 1500;
+const BUDGET_MAX = 5000;
+
+export default function SchoolPanel({
+  school, nearbyRentals, onClose, onRentalClick,
+  rentalMode, onExploreRentals, onBackToOverview, onShareClick,
+  budgetMin = BUDGET_MIN, budgetMax = BUDGET_MAX,
+  onBudgetMinChange, onBudgetMaxChange,
+}) {
   if (!school) return null;
 
   const props = school.properties;
@@ -98,7 +106,9 @@ export default function SchoolPanel({ school, nearbyRentals, onClose, onRentalCl
     : 'Students scored below the Ontario provincial average.';
   // ELL heuristic — TODO: replace with TDSB open data enrolment figures
   const isELLHeavy = hasRating && rating < 4.5 && (schoolType === 'EP' || schoolType === 'ES');
-  const googleQuery = encodeURIComponent(`${displayName} Toronto school reviews`);
+  const ourkidsQuery = encodeURIComponent(displayName);
+  const budgetMinPct = ((budgetMin - BUDGET_MIN) / (BUDGET_MAX - BUDGET_MIN)) * 100;
+  const budgetMaxPct = ((budgetMax - BUDGET_MIN) / (BUDGET_MAX - BUDGET_MIN)) * 100;
 
   /* ── Rental list view ── */
   if (rentalMode) {
@@ -236,14 +246,17 @@ export default function SchoolPanel({ school, nearbyRentals, onClose, onRentalCl
 
             <div className="score-links">
               <a className="score-link" href="https://www.tdsb.on.ca/Find-your/Schools" target="_blank" rel="noopener noreferrer">
-                TDSB school profile ↗
+                TDSB profile ↗
               </a>
-              <a className="score-link" href={`https://www.google.com/search?q=${googleQuery}`} target="_blank" rel="noopener noreferrer">
-                Google reviews ↗
+              <a className="score-link" href={`https://www.ourkids.net/school/search/?q=${ourkidsQuery}`} target="_blank" rel="noopener noreferrer">
+                Parent reviews ↗
+              </a>
+              <a className="score-link" href={`https://www.fraserinstitute.org/school-performance`} target="_blank" rel="noopener noreferrer">
+                Fraser full report ↗
               </a>
             </div>
             <p className="score-attribution">
-              Fraser Institute data, public attribution. Reviews open on Google — not affiliated.
+              Fraser Institute data, public attribution. Parent reviews via OurKids.net — not affiliated.
             </p>
           </div>
         </div>
@@ -259,6 +272,28 @@ export default function SchoolPanel({ school, nearbyRentals, onClose, onRentalCl
           <a className="panel__website-btn" href={website} target="_blank" rel="noopener noreferrer">
             Visit School Website →
           </a>
+        )}
+
+        {/* Rental budget filter */}
+        {onBudgetMinChange && onBudgetMaxChange && (
+          <div className="panel__budget-filter">
+            <div className="panel__budget-header">
+              <span className="panel__budget-label">RENTAL BUDGET</span>
+              <span className="panel__budget-value">${budgetMin.toLocaleString()} – ${budgetMax.toLocaleString()}</span>
+            </div>
+            <div className="dual-slider">
+              <div className="dual-slider__track">
+                <div className="dual-slider__fill" style={{ left: `${budgetMinPct}%`, right: `${100 - budgetMaxPct}%` }} />
+              </div>
+              <input type="range" min={BUDGET_MIN} max={BUDGET_MAX} step={100} value={budgetMin}
+                onChange={e => onBudgetMinChange(Math.min(Number(e.target.value), budgetMax - 100))}
+                className="dual-slider__input" />
+              <input type="range" min={BUDGET_MIN} max={BUDGET_MAX} step={100} value={budgetMax}
+                onChange={e => onBudgetMaxChange(Math.max(Number(e.target.value), budgetMin + 100))}
+                className="dual-slider__input" />
+            </div>
+            <div className="dual-slider__labels"><span>$1,500</span><span>$3,250</span><span>$5,000</span></div>
+          </div>
         )}
 
         {/* Rental count + price range */}
