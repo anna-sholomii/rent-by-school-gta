@@ -43,7 +43,6 @@ function buildFilterSummaryChips({
   else if (languageFilter === 'english') chips.push('English');
   if (gradeLevelFilter === 'jk8') chips.push('JK–8');
   else if (gradeLevelFilter === 'secondary') chips.push('9–12');
-  else if (gradeLevelFilter === 'all') chips.push('All grades');
   if (ratingMin !== 0 || ratingMax !== 10) {
     chips.push(`${ratingMin}–${ratingMax} rating`);
   }
@@ -80,6 +79,17 @@ export default function FilterBar({
   budgetMax = BUDGET_MAX,
   onBudgetMinChange,
   onBudgetMaxChange,
+  selectedRental = null,
+  rentalTypeFilter = 'all',
+  onRentalTypeChange,
+  rentalBedsFilter = 0,
+  onRentalBedsChange,
+  rentalBathsFilter = 0,
+  onRentalBathsChange,
+  rentalSqftTier = 'any',
+  onRentalSqftTierChange,
+  rentalAmenities = [],
+  onRentalAmenitiesToggle,
 }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(true);
@@ -193,7 +203,7 @@ export default function FilterBar({
   const showNoResults = queryTrim.length >= 2 && debouncedQuery.trim().length >= 2 && suggestions.length === 0 && showSuggestions;
 
   const headerTitle = rentalExploreMode
-    ? 'RENTAL BUDGET'
+    ? 'RENTAL FILTERS'
     : (selectedSchoolId != null && !filtersOpen ? 'ADJUST MAP FILTERS' : 'SCHOOL FILTERS');
 
   const headerHint = rentalExploreMode
@@ -202,19 +212,24 @@ export default function FilterBar({
       ? 'Filters are tucked away while you view a school — expand to change the map'
       : undefined);
 
+  const hasSelection = !!(selectedSchool || selectedRental);
+  if (hasSelection && !rentalExploreMode) return null;
+
   return (
     <div className="sidebar-header">
-      <div className="sidebar-brand">
-        <div className="sidebar-logo-row">
-          <div className="sidebar-logo-icon" aria-hidden="true">SB</div>
-          <div className="sidebar-brand__text">
-            <div className="sidebar-title">Rent by School – Toronto</div>
-            <div className="sidebar-subtitle">Find the rentals close to the best schools</div>
+      {!rentalExploreMode && (
+        <>
+          <div className="sidebar-brand">
+            <div className="sidebar-logo-row">
+              <div className="sidebar-logo-icon" aria-hidden="true">SB</div>
+              <div className="sidebar-brand__text">
+                <div className="sidebar-title">Rent by School – Toronto</div>
+                <div className="sidebar-subtitle">Find the rentals close to the best schools</div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div className="sidebar-search-wrap" ref={searchRef}>
+          <div className="sidebar-search-wrap" ref={searchRef}>
         <label className="sidebar-search-label" htmlFor="sidebar-school-search">
           Find a school
         </label>
@@ -284,10 +299,12 @@ export default function FilterBar({
         )}
         {showSuggestions && showNoResults && (
           <div className="sidebar-search-empty" id="sidebar-search-empty-msg" role="status">
-            No schools match “{debouncedQuery.trim()}”. Try spelling, another keyword, or explore the map by area.
+            No schools match &ldquo;{debouncedQuery.trim()}&rdquo;. Try spelling, another keyword, or explore the map by area.
           </div>
         )}
       </div>
+        </>
+      )}
 
       <div
         className={`sidebar-filters-header${selectedSchoolId != null && !filtersOpen ? ' sidebar-filters-header--hidden-context' : ''}`}
@@ -338,28 +355,118 @@ export default function FilterBar({
         <div className="sidebar-filters-body-inner">
           <div className="sidebar-filters-body">
             {rentalExploreMode ? (
-              /* ── Budget filter (rental explore mode) ── */
-              <div className="sidebar-section sidebar-section--spaced">
-                <div className="sidebar-section-header">
-                  <span className="sidebar-section-label">BUDGET RANGE</span>
-                  <span className="sidebar-rating-value">${budgetMin.toLocaleString()} – ${budgetMax.toLocaleString()}</span>
-                </div>
-                <div className="dual-slider sidebar-filters-slider">
-                  <div className="dual-slider__track">
-                    <div className="dual-slider__fill" style={{
-                      left: `${((budgetMin - BUDGET_MIN) / (BUDGET_MAX - BUDGET_MIN)) * 100}%`,
-                      right: `${100 - ((budgetMax - BUDGET_MIN) / (BUDGET_MAX - BUDGET_MIN)) * 100}%`,
-                    }} />
+              <>
+                {/* Budget */}
+                <div className="sidebar-section sidebar-section--spaced">
+                  <div className="sidebar-section-header">
+                    <span className="sidebar-section-label">BUDGET</span>
+                    <span className="sidebar-rating-value">${budgetMin.toLocaleString()} – ${budgetMax.toLocaleString()}</span>
                   </div>
-                  <input type="range" min={BUDGET_MIN} max={BUDGET_MAX} step={100} value={budgetMin}
-                    onChange={e => onBudgetMinChange && onBudgetMinChange(Math.min(Number(e.target.value), budgetMax - 100))}
-                    className="dual-slider__input" aria-label="Minimum budget" />
-                  <input type="range" min={BUDGET_MIN} max={BUDGET_MAX} step={100} value={budgetMax}
-                    onChange={e => onBudgetMaxChange && onBudgetMaxChange(Math.max(Number(e.target.value), budgetMin + 100))}
-                    className="dual-slider__input" aria-label="Maximum budget" />
+                  <div className="dual-slider sidebar-filters-slider">
+                    <div className="dual-slider__track">
+                      <div className="dual-slider__fill" style={{
+                        left: `${((budgetMin - BUDGET_MIN) / (BUDGET_MAX - BUDGET_MIN)) * 100}%`,
+                        right: `${100 - ((budgetMax - BUDGET_MIN) / (BUDGET_MAX - BUDGET_MIN)) * 100}%`,
+                      }} />
+                    </div>
+                    <input type="range" min={BUDGET_MIN} max={BUDGET_MAX} step={100} value={budgetMin}
+                      onChange={e => onBudgetMinChange && onBudgetMinChange(Math.min(Number(e.target.value), budgetMax - 100))}
+                      className="dual-slider__input" aria-label="Minimum budget" />
+                    <input type="range" min={BUDGET_MIN} max={BUDGET_MAX} step={100} value={budgetMax}
+                      onChange={e => onBudgetMaxChange && onBudgetMaxChange(Math.max(Number(e.target.value), budgetMin + 100))}
+                      className="dual-slider__input" aria-label="Maximum budget" />
+                  </div>
+                  <div className="dual-slider__labels"><span>$1,500</span><span>$3,250</span><span>$5,000</span></div>
                 </div>
-                <div className="dual-slider__labels"><span>$1,500</span><span>$3,250</span><span>$5,000</span></div>
-              </div>
+
+                {/* Type */}
+                <div className="sidebar-section sidebar-section--spaced">
+                  <div className="sidebar-section-label">TYPE</div>
+                  <div className="segmented-control sidebar-filters-segments">
+                    {[
+                      { label: 'All', value: 'all' },
+                      { label: 'Condo', value: 'condo' },
+                      { label: 'Apt', value: 'apartment' },
+                      { label: 'House', value: 'house' },
+                      { label: 'Town', value: 'townhouse' },
+                    ].map(({ label, value }) => (
+                      <button key={value} type="button"
+                        className={`segmented-btn${rentalTypeFilter === value ? ' active' : ''}`}
+                        onClick={() => onRentalTypeChange && onRentalTypeChange(value)}
+                      >{label}</button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Beds */}
+                <div className="sidebar-section sidebar-section--spaced">
+                  <div className="sidebar-section-label">BEDS</div>
+                  <div className="segmented-control sidebar-filters-segments">
+                    {[
+                      { label: 'Any', value: 0 },
+                      { label: '1+', value: 1 },
+                      { label: '2+', value: 2 },
+                      { label: '3+', value: 3 },
+                      { label: '4+', value: 4 },
+                    ].map(({ label, value }) => (
+                      <button key={value} type="button"
+                        className={`segmented-btn${rentalBedsFilter === value ? ' active' : ''}`}
+                        onClick={() => onRentalBedsChange && onRentalBedsChange(value)}
+                      >{label}</button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Baths */}
+                <div className="sidebar-section sidebar-section--spaced">
+                  <div className="sidebar-section-label">BATHS</div>
+                  <div className="segmented-control sidebar-filters-segments">
+                    {[
+                      { label: 'Any', value: 0 },
+                      { label: '1+', value: 1 },
+                      { label: '2+', value: 2 },
+                      { label: '3+', value: 3 },
+                    ].map(({ label, value }) => (
+                      <button key={value} type="button"
+                        className={`segmented-btn${rentalBathsFilter === value ? ' active' : ''}`}
+                        onClick={() => onRentalBathsChange && onRentalBathsChange(value)}
+                      >{label}</button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Square footage */}
+                <div className="sidebar-section sidebar-section--spaced">
+                  <div className="sidebar-section-label">SQUARE FOOTAGE</div>
+                  <div className="segmented-control sidebar-filters-segments">
+                    {[
+                      { label: 'Any', value: 'any' },
+                      { label: '<800', value: '<800' },
+                      { label: '800–1.2k', value: '800-1200' },
+                      { label: '1.2–1.5k', value: '1200-1500' },
+                      { label: '1.5k+', value: '1500+' },
+                    ].map(({ label, value }) => (
+                      <button key={value} type="button"
+                        className={`segmented-btn${rentalSqftTier === value ? ' active' : ''}`}
+                        onClick={() => onRentalSqftTierChange && onRentalSqftTierChange(value)}
+                      >{label}</button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Amenities */}
+                <div className="sidebar-section sidebar-section--spaced">
+                  <div className="sidebar-section-label">AMENITIES</div>
+                  <div className="rental-amenity-chips">
+                    {['Parking', 'Gym', 'Laundry', 'Balcony', 'Pet friendly', 'Concierge'].map(a => (
+                      <button key={a} type="button"
+                        className={`amenity-chip${rentalAmenities.includes(a) ? ' amenity-chip--on' : ''}`}
+                        onClick={() => onRentalAmenitiesToggle && onRentalAmenitiesToggle(a)}
+                      >{a}</button>
+                    ))}
+                  </div>
+                </div>
+              </>
             ) : (
               /* ── School filters ── */
               <>

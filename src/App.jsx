@@ -127,6 +127,11 @@ export default function App() {
   const [showSchoolList, setShowSchoolList] = useState(false);
   const [loadedSchools, setLoadedSchools] = useState([]);
   const [filtersHydrated, setFiltersHydrated] = useState(false);
+  const [rentalTypeFilter, setRentalTypeFilter] = useState('all');
+  const [rentalBedsFilter, setRentalBedsFilter] = useState(0);
+  const [rentalBathsFilter, setRentalBathsFilter] = useState(0);
+  const [rentalSqftTier, setRentalSqftTier] = useState('any');
+  const [rentalAmenities, setRentalAmenities] = useState([]);
 
   const pendingSchoolIdRef = useRef(null);
   const pendingModeRef = useRef(null);
@@ -221,6 +226,17 @@ export default function App() {
   const handleBackToOverview = useCallback(() => {
     setRentalExploreMode(false);
     setListView(false);
+    setRentalTypeFilter('all');
+    setRentalBedsFilter(0);
+    setRentalBathsFilter(0);
+    setRentalSqftTier('any');
+    setRentalAmenities([]);
+  }, []);
+
+  const handleRentalAmenitiesToggle = useCallback((amenity) => {
+    setRentalAmenities(prev =>
+      prev.includes(amenity) ? prev.filter(a => a !== amenity) : [...prev, amenity]
+    );
   }, []);
 
   // When a rental marker is clicked — remember which school we came from
@@ -247,6 +263,20 @@ export default function App() {
         return rentalsData
           .filter(r => pointInPolygon(r.lat, r.lng, area.coordinates))
           .filter(r => r.price >= budgetMin && r.price <= budgetMax)
+          .filter(r => rentalTypeFilter === 'all' || r.type === rentalTypeFilter)
+          .filter(r => rentalBedsFilter === 0 || (r.bedrooms ?? 0) >= rentalBedsFilter)
+          .filter(r => rentalBathsFilter === 0 || (r.bathrooms ?? 0) >= rentalBathsFilter)
+          .filter(r => {
+            if (rentalSqftTier === 'any') return true;
+            const s = r.sqft;
+            if (!s) return true;
+            if (rentalSqftTier === '<800') return s < 800;
+            if (rentalSqftTier === '800-1200') return s >= 800 && s <= 1200;
+            if (rentalSqftTier === '1200-1500') return s >= 1200 && s <= 1500;
+            if (rentalSqftTier === '1500+') return s >= 1500;
+            return true;
+          })
+          .filter(r => rentalAmenities.length === 0 || rentalAmenities.every(a => r.amenities?.includes(a)))
           .map(r => ({
             ...r,
             distance: haversineDistance(selectedSchool.lat, selectedSchool.lng, r.lat, r.lng),
@@ -420,6 +450,17 @@ export default function App() {
           budgetMax={budgetMax}
           onBudgetMinChange={setBudgetMin}
           onBudgetMaxChange={setBudgetMax}
+          selectedRental={selectedRental}
+          rentalTypeFilter={rentalTypeFilter}
+          onRentalTypeChange={setRentalTypeFilter}
+          rentalBedsFilter={rentalBedsFilter}
+          onRentalBedsChange={setRentalBedsFilter}
+          rentalBathsFilter={rentalBathsFilter}
+          onRentalBathsChange={setRentalBathsFilter}
+          rentalSqftTier={rentalSqftTier}
+          onRentalSqftTierChange={setRentalSqftTier}
+          rentalAmenities={rentalAmenities}
+          onRentalAmenitiesToggle={handleRentalAmenitiesToggle}
         />
         {/* Scrollable content below header */}
         <div className="app__sidebar-content">

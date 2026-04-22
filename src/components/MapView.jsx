@@ -412,23 +412,30 @@ export default function MapView({
       zoomControl: false,
       attributionControl: false, // we place it manually to avoid mobile bottom-sheet overlap
     });
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
-    // Attribution at topright so it never overlaps the mobile bottom sheet
-    L.control.attribution({ position: 'topright', prefix: false })
-      .addAttribution(
-        'Map tiles by <a href="https://carto.com/">Carto</a>, under CC BY 3.0. ' +
-        'Data by <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, under ODbL.'
-      )
-      .addTo(map);
-    // Improve SR context for attribution links injected by Leaflet.
-    setTimeout(() => {
-      const links = map.getContainer().querySelectorAll('.leaflet-control-attribution a');
-      links.forEach((link) => {
-        const label = link.textContent?.trim();
-        if (!label) return;
-        link.setAttribute('aria-label', `${label} attribution link`);
+    // Attribution toggle `!` button at bottom-right (added first so zoom stacks above it)
+    const attrCtrl = L.control({ position: 'bottomright' });
+    attrCtrl.onAdd = function () {
+      const wrap = L.DomUtil.create('div', 'attr-toggle');
+      const btn = L.DomUtil.create('button', 'attr-toggle__btn', wrap);
+      btn.type = 'button';
+      btn.setAttribute('aria-label', 'Show map attribution');
+      btn.textContent = '!';
+      const panel = L.DomUtil.create('div', 'attr-toggle__panel', wrap);
+      panel.innerHTML = 'Map tiles by <a href="https://carto.com/">Carto</a>, CC BY 3.0. Data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, ODbL.';
+      panel.style.display = 'none';
+      let open = false;
+      L.DomEvent.on(btn, 'click', (e) => {
+        L.DomEvent.stopPropagation(e);
+        L.DomEvent.preventDefault(e);
+        open = !open;
+        panel.style.display = open ? 'block' : 'none';
+        btn.setAttribute('aria-label', open ? 'Hide map attribution' : 'Show map attribution');
       });
-    }, 0);
+      L.DomEvent.disableClickPropagation(wrap);
+      return wrap;
+    };
+    attrCtrl.addTo(map);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
     const tileLayer = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_nolabels/{z}/{x}/{y}.png', {
       subdomains: 'abc',
       maxZoom: 20,
