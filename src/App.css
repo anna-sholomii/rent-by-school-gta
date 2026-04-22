@@ -1315,10 +1315,26 @@
   padding: 0;
   font-family: inherit;
 }
-.panel__rental-mode-count {
-  font-size: 13px;
+.panel__rental-result-badge {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  background: var(--accent-soft);
+  border: 1px solid rgba(47, 107, 79, 0.18);
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin: 8px 16px 4px;
+}
+.panel__rental-result-num {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+.panel__rental-result-label {
+  font-size: 14px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--accent);
 }
 .panel__close--inline {
   position: static;
@@ -2738,6 +2754,21 @@
   transition: opacity 0.15s;
 }
 .sidebar-filters-reset:hover { opacity: 0.7; }
+
+.sidebar-apply-btn {
+  width: 100%;
+  padding: 11px 16px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.sidebar-apply-btn:hover { background: var(--accent-hover); }
 
 /* ==============================
    SchoolPanel — Rental budget filter

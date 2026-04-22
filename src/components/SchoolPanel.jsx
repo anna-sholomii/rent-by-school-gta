@@ -55,14 +55,9 @@ function getNeighbourhoodNote(rating) {
   return "Check walkability and transit access for this catchment before shortlisting rentals — neighbourhood quality varies.";
 }
 
-const BUDGET_MIN = 1500;
-const BUDGET_MAX = 5000;
-
 export default function SchoolPanel({
   school, nearbyRentals, onClose, onRentalClick,
   rentalMode, onExploreRentals, onBackToOverview, onShareClick,
-  budgetMin = BUDGET_MIN, budgetMax = BUDGET_MAX,
-  onBudgetMinChange, onBudgetMaxChange,
 }) {
   if (!school) return null;
 
@@ -107,8 +102,6 @@ export default function SchoolPanel({
   // ELL heuristic — TODO: replace with TDSB open data enrolment figures
   const isELLHeavy = hasRating && rating < 4.5 && (schoolType === 'EP' || schoolType === 'ES');
   const ourkidsQuery = encodeURIComponent(displayName);
-  const budgetMinPct = ((budgetMin - BUDGET_MIN) / (BUDGET_MAX - BUDGET_MIN)) * 100;
-  const budgetMaxPct = ((budgetMax - BUDGET_MIN) / (BUDGET_MAX - BUDGET_MIN)) * 100;
 
   /* ── Rental list view ── */
   if (rentalMode) {
@@ -121,8 +114,11 @@ export default function SchoolPanel({
         )}
         <div className="panel__rental-mode-header">
           <button className="panel__back-btn" onClick={onBackToOverview}>← School info</button>
-          <span className="panel__rental-mode-count">{nearbyRentals.length} rental{nearbyRentals.length !== 1 ? 's' : ''}</span>
           <button className="panel__close panel__close--inline" onClick={onClose} aria-label="Close">✕</button>
+        </div>
+        <div className="panel__rental-result-badge">
+          <span className="panel__rental-result-num">{nearbyRentals.length}</span>
+          <span className="panel__rental-result-label">rental{nearbyRentals.length !== 1 ? 's' : ''} in catchment</span>
         </div>
         <div className="panel__neighbourhood-note" role="note" aria-label="Catchment verification notice">
           <MapPin className="panel__neighbourhood-note-icon" size={14} color="var(--mute)" />
@@ -314,28 +310,6 @@ export default function SchoolPanel({
           </a>
         )}
 
-        {/* Rental budget filter */}
-        {onBudgetMinChange && onBudgetMaxChange && (
-          <div className="panel__budget-filter">
-            <div className="panel__budget-header">
-              <span className="panel__budget-label">RENTAL BUDGET</span>
-              <span className="panel__budget-value">${budgetMin.toLocaleString()} – ${budgetMax.toLocaleString()}</span>
-            </div>
-            <div className="dual-slider">
-              <div className="dual-slider__track">
-                <div className="dual-slider__fill" style={{ left: `${budgetMinPct}%`, right: `${100 - budgetMaxPct}%` }} />
-              </div>
-              <input type="range" min={BUDGET_MIN} max={BUDGET_MAX} step={100} value={budgetMin}
-                onChange={e => onBudgetMinChange(Math.min(Number(e.target.value), budgetMax - 100))}
-                className="dual-slider__input" />
-              <input type="range" min={BUDGET_MIN} max={BUDGET_MAX} step={100} value={budgetMax}
-                onChange={e => onBudgetMaxChange(Math.max(Number(e.target.value), budgetMin + 100))}
-                className="dual-slider__input" />
-            </div>
-            <div className="dual-slider__labels"><span>$1,500</span><span>$3,250</span><span>$5,000</span></div>
-          </div>
-        )}
-
         {/* Rental count + price range */}
         <div className="panel__rental-summary">
           {hasRentals ? (
@@ -368,7 +342,7 @@ export default function SchoolPanel({
           onClick={() => hasRentals && onExploreRentals && onExploreRentals()}
           disabled={!hasRentals}
         >
-          {hasRentals ? '3. Explore rentals in catchment →' : 'No rentals in catchment'}
+          {hasRentals ? 'Explore Rentals in Catchment →' : 'No rentals in catchment'}
         </button>
       </div>
     </div>

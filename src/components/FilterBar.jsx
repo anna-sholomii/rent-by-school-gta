@@ -60,6 +60,9 @@ function formatDistKm(lat, lng) {
 /**
  * Left sidebar: brand, search, and school filters (rating, board, language, grade).
  */
+const BUDGET_MIN = 1500;
+const BUDGET_MAX = 5000;
+
 export default function FilterBar({
   ratingMin, ratingMax, onRatingMinChange, onRatingMaxChange,
   boardFilter, onBoardFilterChange,
@@ -71,6 +74,12 @@ export default function FilterBar({
   selectedSchool,
   matchingSchoolCount = 0,
   onExploreMapHint,
+  onApplyFilters,
+  rentalExploreMode = false,
+  budgetMin = BUDGET_MIN,
+  budgetMax = BUDGET_MAX,
+  onBudgetMinChange,
+  onBudgetMaxChange,
 }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(true);
@@ -91,6 +100,10 @@ export default function FilterBar({
   useEffect(() => {
     if (selectedSchoolId != null) setFiltersOpen(false);
   }, [selectedSchoolId]);
+
+  useEffect(() => {
+    if (rentalExploreMode) setFiltersOpen(true);
+  }, [rentalExploreMode]);
 
   useEffect(() => {
     function handleClick(e) {
@@ -179,13 +192,15 @@ export default function FilterBar({
   const queryTrim = schoolSearch.trim();
   const showNoResults = queryTrim.length >= 2 && debouncedQuery.trim().length >= 2 && suggestions.length === 0 && showSuggestions;
 
-  const headerTitle = selectedSchoolId != null && !filtersOpen
-    ? 'ADJUST MAP FILTERS'
-    : 'SCHOOL FILTERS';
+  const headerTitle = rentalExploreMode
+    ? 'RENTAL BUDGET'
+    : (selectedSchoolId != null && !filtersOpen ? 'ADJUST MAP FILTERS' : 'SCHOOL FILTERS');
 
-  const headerHint = selectedSchoolId != null && !filtersOpen
-    ? 'Filters are tucked away while you view a school — expand to change the map'
-    : undefined;
+  const headerHint = rentalExploreMode
+    ? undefined
+    : (selectedSchoolId != null && !filtersOpen
+      ? 'Filters are tucked away while you view a school — expand to change the map'
+      : undefined);
 
   return (
     <div className="sidebar-header">
@@ -193,8 +208,8 @@ export default function FilterBar({
         <div className="sidebar-logo-row">
           <div className="sidebar-logo-icon" aria-hidden="true">SB</div>
           <div className="sidebar-brand__text">
-            <div className="sidebar-title">Rent by School</div>
-            <div className="sidebar-subtitle">Toronto · Schools & rentals</div>
+            <div className="sidebar-title">Rent by School – Toronto</div>
+            <div className="sidebar-subtitle">Find the rentals close to the best schools</div>
           </div>
         </div>
       </div>
@@ -237,18 +252,6 @@ export default function FilterBar({
             </button>
           )}
         </div>
-
-        <p className="sidebar-search-hint">
-          Renting near a street or intersection?{' '}
-          <button
-            type="button"
-            className="sidebar-search-hint__link"
-            onClick={() => onExploreMapHint && onExploreMapHint()}
-          >
-            Explore the map
-          </button>
-          {' '}— then tap a school pin for catchment rentals.
-        </p>
 
         {showSuggestions && suggestions.length > 0 && (
           <ul className="sidebar-suggestions" id={listboxId} role="listbox" ref={suggestionsRef}>
@@ -301,7 +304,6 @@ export default function FilterBar({
           }
         }}
       >
-        <span className="sidebar-filters-icon" aria-hidden="true">Filter</span>
         <span className="sidebar-filters-label">{headerTitle}</span>
         {!filtersOpen && activeFilterCount > 0 && (
           <span className="sidebar-filters-active-count">{activeFilterCount} active</span>
@@ -335,111 +337,125 @@ export default function FilterBar({
       >
         <div className="sidebar-filters-body-inner">
           <div className="sidebar-filters-body">
-            <p className="sidebar-filter-meta" role="status">
-              Showing <strong>{matchingSchoolCount}</strong> {matchingSchoolCount === 1 ? 'school' : 'schools'} matching these filters on the map.
-            </p>
-
-            <div className="sidebar-section sidebar-section--spaced">
-              <div className="sidebar-section-header">
-                <span className="sidebar-section-label">RATING</span>
-                <span className="sidebar-rating-value">{ratingMin} – {ratingMax}</span>
-              </div>
-              <div className="dual-slider sidebar-filters-slider">
-                <div className="dual-slider__track">
-                  <div className="dual-slider__fill" style={{ left: `${minPct}%`, right: `${100 - maxPct}%` }} />
+            {rentalExploreMode ? (
+              /* ── Budget filter (rental explore mode) ── */
+              <div className="sidebar-section sidebar-section--spaced">
+                <div className="sidebar-section-header">
+                  <span className="sidebar-section-label">BUDGET RANGE</span>
+                  <span className="sidebar-rating-value">${budgetMin.toLocaleString()} – ${budgetMax.toLocaleString()}</span>
                 </div>
-                <input
-                  type="range"
-                  min={0}
-                  max={10}
-                  step={0.5}
-                  value={ratingMin}
-                  onChange={e => onRatingMinChange(Math.min(Number(e.target.value), ratingMax - 0.5))}
-                  className="dual-slider__input"
-                  aria-label="Minimum Fraser rating"
-                />
-                <input
-                  type="range"
-                  min={0}
-                  max={10}
-                  step={0.5}
-                  value={ratingMax}
-                  onChange={e => onRatingMaxChange(Math.max(Number(e.target.value), ratingMin + 0.5))}
-                  className="dual-slider__input"
-                  aria-label="Maximum Fraser rating"
-                />
+                <div className="dual-slider sidebar-filters-slider">
+                  <div className="dual-slider__track">
+                    <div className="dual-slider__fill" style={{
+                      left: `${((budgetMin - BUDGET_MIN) / (BUDGET_MAX - BUDGET_MIN)) * 100}%`,
+                      right: `${100 - ((budgetMax - BUDGET_MIN) / (BUDGET_MAX - BUDGET_MIN)) * 100}%`,
+                    }} />
+                  </div>
+                  <input type="range" min={BUDGET_MIN} max={BUDGET_MAX} step={100} value={budgetMin}
+                    onChange={e => onBudgetMinChange && onBudgetMinChange(Math.min(Number(e.target.value), budgetMax - 100))}
+                    className="dual-slider__input" aria-label="Minimum budget" />
+                  <input type="range" min={BUDGET_MIN} max={BUDGET_MAX} step={100} value={budgetMax}
+                    onChange={e => onBudgetMaxChange && onBudgetMaxChange(Math.max(Number(e.target.value), budgetMin + 100))}
+                    className="dual-slider__input" aria-label="Maximum budget" />
+                </div>
+                <div className="dual-slider__labels"><span>$1,500</span><span>$3,250</span><span>$5,000</span></div>
               </div>
-              <div className="dual-slider__labels"><span>1</span><span>5</span><span>10</span></div>
-              <div className="dual-slider__band-labels">
-                <span>Below avg</span>
-                <span>Mid</span>
-                <span>Strong</span>
-              </div>
-              <div className="rating-badges">
-                {RATING_BADGES.map(b => (
-                  <button
-                    key={b.label}
-                    type="button"
-                    className="rating-badge"
-                    style={{ color: b.color, background: 'transparent', border: `1px solid ${b.color}` }}
-                    onClick={() => { onRatingMinChange(b.min); onRatingMaxChange(b.max); }}
-                  >
-                    {b.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+            ) : (
+              /* ── School filters ── */
+              <>
+                <div className="sidebar-section sidebar-section--spaced">
+                  <div className="sidebar-section-header">
+                    <span className="sidebar-section-label">RATING</span>
+                    <span className="sidebar-rating-value">{ratingMin} – {ratingMax}</span>
+                  </div>
+                  <div className="dual-slider sidebar-filters-slider">
+                    <div className="dual-slider__track">
+                      <div className="dual-slider__fill" style={{ left: `${minPct}%`, right: `${100 - maxPct}%` }} />
+                    </div>
+                    <input
+                      type="range" min={0} max={10} step={0.5} value={ratingMin}
+                      onChange={e => onRatingMinChange(Math.min(Number(e.target.value), ratingMax - 0.5))}
+                      className="dual-slider__input" aria-label="Minimum Fraser rating"
+                    />
+                    <input
+                      type="range" min={0} max={10} step={0.5} value={ratingMax}
+                      onChange={e => onRatingMaxChange(Math.max(Number(e.target.value), ratingMin + 0.5))}
+                      className="dual-slider__input" aria-label="Maximum Fraser rating"
+                    />
+                  </div>
+                  <div className="dual-slider__labels"><span>1</span><span>5</span><span>10</span></div>
+                  <div className="dual-slider__band-labels">
+                    <span>Below avg</span>
+                    <span>Mid</span>
+                    <span>Strong</span>
+                  </div>
+                  <div className="rating-badges">
+                    {RATING_BADGES.map(b => (
+                      <button
+                        key={b.label}
+                        type="button"
+                        className="rating-badge"
+                        style={{ color: b.color, background: 'transparent', border: `1px solid ${b.color}` }}
+                        onClick={() => { onRatingMinChange(b.min); onRatingMaxChange(b.max); }}
+                      >
+                        {b.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-            <div className="sidebar-section sidebar-section--spaced">
-              <div className="sidebar-section-label">BOARD</div>
-              <div className="segmented-control sidebar-filters-segments">
-                {BOARD_TYPES.map(t => (
-                  <button
-                    key={t.value}
-                    type="button"
-                    className={`segmented-btn${boardFilter === t.value ? ' active' : ''}`}
-                    onClick={() => onBoardFilterChange(t.value)}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+                <div className="sidebar-section sidebar-section--spaced">
+                  <div className="sidebar-section-label">BOARD</div>
+                  <div className="segmented-control sidebar-filters-segments">
+                    {BOARD_TYPES.map(t => (
+                      <button key={t.value} type="button"
+                        className={`segmented-btn${boardFilter === t.value ? ' active' : ''}`}
+                        onClick={() => onBoardFilterChange(t.value)}
+                      >{t.label}</button>
+                    ))}
+                  </div>
+                </div>
 
-            <div className="sidebar-section sidebar-section--spaced">
-              <div className="sidebar-section-label">LANGUAGE</div>
-              <div className="segmented-control sidebar-filters-segments">
-                {LANGUAGES.map(t => (
-                  <button
-                    key={t.value}
-                    type="button"
-                    className={`segmented-btn${languageFilter === t.value ? ' active' : ''}`}
-                    onClick={() => onLanguageFilterChange(t.value)}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+                <div className="sidebar-section sidebar-section--spaced">
+                  <div className="sidebar-section-label">LANGUAGE</div>
+                  <div className="segmented-control sidebar-filters-segments">
+                    {LANGUAGES.map(t => (
+                      <button key={t.value} type="button"
+                        className={`segmented-btn${languageFilter === t.value ? ' active' : ''}`}
+                        onClick={() => onLanguageFilterChange(t.value)}
+                      >{t.label}</button>
+                    ))}
+                  </div>
+                </div>
 
-            <div className="sidebar-section sidebar-section--spaced">
-              <div className="sidebar-section-label">GRADE LEVEL</div>
-              <p className="sidebar-field-hint">
-                JK–8 is elementary; 9–12 is secondary (Ontario public / Catholic boards).
-              </p>
-              <div className="segmented-control sidebar-filters-segments">
-                {GRADE_LEVELS.map(t => (
-                  <button
-                    key={t.value}
-                    type="button"
-                    className={`segmented-btn${gradeLevelFilter === t.value ? ' active' : ''}`}
-                    onClick={() => onGradeLevelChange(t.value)}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+                <div className="sidebar-section sidebar-section--spaced">
+                  <div className="sidebar-section-label">GRADE LEVEL</div>
+                  <p className="sidebar-field-hint">
+                    JK–8 is elementary; 9–12 is secondary (Ontario public / Catholic boards).
+                  </p>
+                  <div className="segmented-control sidebar-filters-segments">
+                    {GRADE_LEVELS.map(t => (
+                      <button key={t.value} type="button"
+                        className={`segmented-btn${gradeLevelFilter === t.value ? ' active' : ''}`}
+                        onClick={() => onGradeLevelChange(t.value)}
+                      >{t.label}</button>
+                    ))}
+                  </div>
+                </div>
+
+                {onApplyFilters && (
+                  <div className="sidebar-section sidebar-section--spaced">
+                    <button
+                      type="button"
+                      className="sidebar-apply-btn"
+                      onClick={() => { setFiltersOpen(false); onApplyFilters(); }}
+                    >
+                      Apply filters
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>

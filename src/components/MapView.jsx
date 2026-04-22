@@ -243,6 +243,7 @@ function addLegend(map) {
     return div;
   };
   legend.addTo(map);
+  return legend;
 }
 
 /**
@@ -394,6 +395,7 @@ export default function MapView({
   const [schools, setSchools] = useState([]);
   const [tileError, setTileError] = useState(false);
   const tileErrorTimerRef = useRef(null);
+  const legendRef = useRef(null);
 
   useEffect(() => { onSchoolClickRef.current = onSchoolClick; }, [onSchoolClick]);
 
@@ -440,7 +442,7 @@ export default function MapView({
     mapInstanceRef.current = map;
     onMapReady && onMapReady(map);
 
-    addLegend(map);
+    legendRef.current = addLegend(map);
   }, []);
 
   // Load boundary GeoJSON data from Toronto Open Data on mount
@@ -639,6 +641,16 @@ export default function MapView({
       if (map.hasLayer(clusterGroupRef.current)) map.removeLayer(clusterGroupRef.current);
     } else {
       if (!map.hasLayer(clusterGroupRef.current)) map.addLayer(clusterGroupRef.current);
+    }
+  }, [exploreRentalsMode]);
+
+  // Hide Fraser legend while in explore-rentals mode (#9)
+  useEffect(() => {
+    if (!mapInstanceRef.current || !legendRef.current) return;
+    if (exploreRentalsMode) {
+      legendRef.current.remove();
+    } else {
+      legendRef.current.addTo(mapInstanceRef.current);
     }
   }, [exploreRentalsMode]);
 

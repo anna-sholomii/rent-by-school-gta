@@ -414,28 +414,16 @@ export default function App() {
           onExploreMapHint={() =>
             showToast('Pan and zoom the map, then tap a school pin — or keep searching by name above.')
           }
+          onApplyFilters={() => setShowSchoolList(true)}
+          rentalExploreMode={rentalExploreMode}
+          budgetMin={budgetMin}
+          budgetMax={budgetMax}
+          onBudgetMinChange={setBudgetMin}
+          onBudgetMaxChange={setBudgetMax}
         />
         {/* Scrollable content below header */}
         <div className="app__sidebar-content">
           {/* Desktop: Map ↔ Schools list toggle (hidden when a panel is open) */}
-          {!selectedSchool && !selectedRental && (
-            <div className="sidebar-view-toggle" role="group" aria-label="View mode">
-              <button
-                className={`segmented-btn${!showSchoolList ? ' active' : ''}`}
-                onClick={() => setShowSchoolList(false)}
-                aria-pressed={!showSchoolList}
-              >
-                Map
-              </button>
-              <button
-                className={`segmented-btn${showSchoolList ? ' active' : ''}`}
-                onClick={() => setShowSchoolList(true)}
-                aria-pressed={showSchoolList}
-              >
-                Schools list
-              </button>
-            </div>
-          )}
 
           {selectedSchool && rentalExploreMode && listView ? (
             <RentalListView
@@ -454,10 +442,6 @@ export default function App() {
               onExploreRentals={handleExploreRentals}
               onBackToOverview={handleBackToOverview}
               onShareClick={handleShare}
-              budgetMin={budgetMin}
-              budgetMax={budgetMax}
-              onBudgetMinChange={setBudgetMin}
-              onBudgetMaxChange={setBudgetMax}
             />
           )}
           {selectedRental && (
