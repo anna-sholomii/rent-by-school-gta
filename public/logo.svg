@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 112" role="img" aria-label="Rent by School logo">
+  <!-- Outer map-pin shape -->
+  <path fill="#2f6b4f" d="M50,4 C29,4 12,21 12,42 C12,63 50,108 50,108 C50,108 88,63 88,42 C88,21 71,4 50,4Z"/>
+
+  <!-- Inner white circle -->
+  <circle fill="white" cx="50" cy="40" r="27"/>
+
+  <!-- ── School building (dark green on white) ── -->
+
+  <!-- Left wing -->
+  <rect fill="#2f6b4f" x="23" y="46" width="15" height="14"/>
+  <!-- Left wing 2×2 windows -->
+  <rect fill="white" x="25.5" y="48"   width="4" height="3.5"/>
+  <rect fill="white" x="31.5" y="48"   width="4" height="3.5"/>
+  <rect fill="white" x="25.5" y="53"   width="4" height="3.5"/>
+  <rect fill="white" x="31.5" y="53"   width="4" height="3.5"/>
+
+  <!-- Right wing -->
+  <rect fill="#2f6b4f" x="62" y="46" width="15" height="14"/>
+  <!-- Right wing 2×2 windows -->
+  <rect fill="white" x="64.5" y="48"  width="4" height="3.5"/>
+  <rect fill="white" x="70.5" y="48"  width="4" height="3.5"/>
+  <rect fill="white" x="64.5" y="53"  width="4" height="3.5"/>
+  <rect fill="white" x="70.5" y="53"  width="4" height="3.5"/>
+
+  <!-- Center main building body -->
+  <rect fill="#2f6b4f" x="38" y="34" width="24" height="26"/>
+
+  <!-- Gabled roof (triangle) -->
+  <polygon fill="#2f6b4f" points="35,34 50,21 65,34"/>
+
+  <!-- Flag pole -->
+  <rect fill="#2f6b4f" x="49" y="13" width="2" height="9"/>
+  <!-- Flag (small right-pointing triangle) -->
+  <polygon fill="#2f6b4f" points="51,13 59,16.5 51,20"/>
+
+  <!-- Circular clock/window -->
+  <circle fill="white" cx="50" cy="40" r="3.5"/>
+
+  <!-- Arched door (white) -->
+  <path fill="white" d="M45.5,60 L45.5,54 A4.5,4.5 0 0 1 54.5,54 L54.5,60 Z"/>
+</svg>

@@ -424,6 +424,12 @@
   flex-shrink: 0;
   box-shadow: 0 8px 20px rgba(47, 107, 79, 0.28);
 }
+.sidebar-logo-img {
+  width: 38px;
+  height: auto;
+  flex-shrink: 0;
+  display: block;
+}
 
 .sidebar-title {
   font-size: 17px;
@@ -2930,4 +2936,106 @@
   font-size: 12px;
   height: 28px;
   flex: 1;
+}
+
+/* ==============================
+   App Loader / Splash Screen
+   ============================== */
+.app-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.app-loader--entering {
+  animation: loader-bg-in 0.35s ease both;
+}
+.app-loader--leaving {
+  animation: loader-bg-out 0.55s ease both;
+  pointer-events: none;
+}
+.app-loader__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.app-loader--entering .app-loader__card,
+.app-loader--visible .app-loader__card {
+  animation: loader-card-in 0.6s cubic-bezier(0.34, 1.45, 0.64, 1) both;
+}
+.app-loader--leaving .app-loader__card {
+  animation: loader-card-out 0.45s ease both;
+}
+.app-loader__logo {
+  width: 88px;
+  height: auto;
+  filter: drop-shadow(0 6px 18px rgba(47,107,79,0.22));
+}
+.app-loader--visible .app-loader__logo {
+  animation: loader-logo-pulse 1.8s ease-in-out infinite;
+}
+.app-loader__wordmark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.app-loader__title {
+  font-size: 21px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.025em;
+  line-height: 1;
+}
+.app-loader__city {
+  font-size: 13px;
+  color: var(--mute);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+/* Animated loading dots */
+.app-loader__dots {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+.app-loader__dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.25;
+  animation: loader-dot 1.2s ease-in-out infinite;
+}
+.app-loader__dots span:nth-child(2) { animation-delay: 0.2s; }
+.app-loader__dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes loader-bg-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes loader-bg-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+@keyframes loader-card-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.94); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+@keyframes loader-card-out {
+  from { opacity: 1; transform: translateY(0)     scale(1);    }
+  to   { opacity: 0; transform: translateY(-10px) scale(0.96); }
+}
+@keyframes loader-logo-pulse {
+  0%, 100% { transform: scale(1);    }
+  50%       { transform: scale(1.05); }
+}
+@keyframes loader-dot {
+  0%, 80%, 100% { opacity: 0.2;  transform: scale(0.85); }
+  40%            { opacity: 1;    transform: scale(1.1);  }
 }

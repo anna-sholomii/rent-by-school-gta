@@ -6,6 +6,7 @@ import RentalPanel from './components/RentalPanel';
 import FilterBar from './components/FilterBar';
 import SchoolList from './components/SchoolList';
 import PurposeChip from './components/PurposeChip';
+import AppLoader from './components/AppLoader';
 import fraserRatings from './data/fraserRatings';
 import { rankSchoolsByQuery } from './utils/schoolSearch';
 import { useDebouncedValue } from './hooks/useDebouncedValue';
@@ -823,6 +824,9 @@ export default function App() {
       <div className={`map-toast${toastVisible ? ' map-toast--visible' : ''}`}>
         {toastMessage}
       </div>
+
+      {/* Splash loader — shown until GeoJSON schools arrive */}
+      <AppLoader done={loadedSchools.length > 0} />
     </div>
   );
 }

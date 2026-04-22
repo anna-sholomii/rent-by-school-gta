@@ -221,7 +221,7 @@ export default function FilterBar({
         <>
           <div className="sidebar-brand">
             <div className="sidebar-logo-row">
-              <div className="sidebar-logo-icon" aria-hidden="true">SB</div>
+              <img src="/logo.svg" className="sidebar-logo-img" alt="" aria-hidden="true" width="38" height="43" />
               <div className="sidebar-brand__text">
                 <div className="sidebar-title">Rent by School – Toronto</div>
                 <div className="sidebar-subtitle">Find the rentals close to the best schools</div>
