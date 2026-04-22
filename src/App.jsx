@@ -541,22 +541,11 @@ export default function App() {
               aria-controls="mobile-filters-panel"
               type="button"
             >
-              <span className="mtf-pill__index">1.</span>
               <span className="mtf-pill__text">{refinePillLabel}</span>
               {activeFilterCount > 0 && (
                 <span className="mtf-pill__badge" aria-hidden="true">{activeFilterCount}</span>
               )}
               <span className="mtf-pill__caret" aria-hidden="true">{mobileFiltersOpen ? '▴' : '▾'}</span>
-            </button>
-            <button
-              type="button"
-              className={`mtf-pill${showSchoolList ? ' mtf-pill--active' : ''}`}
-              onClick={() => setShowSchoolList(v => !v)}
-              aria-pressed={showSchoolList}
-              aria-label="Toggle choose school list"
-            >
-              <span className="mtf-pill__index">2.</span>
-              <span className="mtf-pill__text">Choose school</span>
             </button>
           </div>
         )}

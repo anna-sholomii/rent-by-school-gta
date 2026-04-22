@@ -1622,6 +1622,13 @@
   box-shadow: var(--shadow-soft);
 }
 
+@media (min-width: 769px) {
+  .school-panel__hero {
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
 .school-panel__hero::after {
   content: '';
   position: absolute;
@@ -2356,9 +2363,25 @@
   }
 }
 
-/* Desktop: hide drag handle */
+/* Desktop: hide drag handle; flush panel tops; no rounded corners on photos */
 @media (min-width: 769px) {
   .sheet-drag-handle { display: none; }
+
+  /* Rental photo flush at top, no rounded corners */
+  .panel__photo,
+  .panel__photo--rental {
+    border-radius: 0 !important;
+    margin-top: 0;
+  }
+
+  /* Rental panel: flex column so photo always appears first (above back-btn) */
+  .rental-panel {
+    display: flex;
+    flex-direction: column;
+  }
+  .rental-panel .panel__photo {
+    order: -1;
+  }
 }
 
 /* Map tap overlay — covers map above the peek sheet */
