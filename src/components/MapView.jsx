@@ -6,6 +6,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import fraserRatings, { getFraserRating } from '../data/fraserRatings';
 import { toTitleCase } from '../utils/school.js';
+import { haversineDistance } from '../utils/geo';
 import rentalsData from '../data/rentals';
 import catchmentAreas from '../data/catchmentAreas';
 import buildingFootprints from '../data/buildingFootprints.json';
@@ -28,6 +29,21 @@ const TYPE_COLORS = {
 };
 
 const RENTAL_COLOR = '#f97316';
+
+/** When a catchment is shown, zoom so it fills most of the map (mask / colors unchanged). */
+const CATCHMENT_FIT_PADDING = [4, 4];
+const CATCHMENT_FIT_MAX_ZOOM = 19;
+
+/** Catchment outline: match former fallback circle style (dotted). */
+const CATCHMENT_DASH_ARRAY = '6 4';
+const CATCHMENT_OUTLINE_WEIGHT = 2;
+
+/** Simplified catchment shape: regular pentagon, enlarged vs the real boundary envelope. */
+const PENTAGON_SIDES = 5;
+const PENTAGON_RADIUS_SCALE = 1.38;
+const PENTAGON_MIN_RADIUS_M = 280;
+/** Former 500 m circle fallback — pentagon is larger for visibility. */
+const FALLBACK_PENTAGON_RADIUS_M = 680;
 
 // Toronto Open Data CKAN API base URL
 const CKAN_BASE = 'https://ckan0.cf.opendata.inter.prod-toronto.ca';
@@ -55,14 +71,71 @@ function pointInPolygon(lat, lng, coordinates) {
   return inside;
 }
 
-function haversineDistance(lat1, lng1, lat2, lng2) {
+/** Geographic destination from (lat,lng) with bearing (rad) and distance (m). */
+function destinationLatLng(lat, lng, bearingRad, distanceM) {
   const R = 6371000;
-  const toRad = d => d * Math.PI / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const a = Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const δ = distanceM / R;
+  const φ1 = (lat * Math.PI) / 180;
+  const λ1 = (lng * Math.PI) / 180;
+  const φ2 = Math.asin(
+    Math.sin(φ1) * Math.cos(δ) + Math.cos(φ1) * Math.sin(δ) * Math.cos(bearingRad)
+  );
+  const λ2 =
+    λ1 +
+    Math.atan2(
+      Math.sin(bearingRad) * Math.sin(δ) * Math.cos(φ1),
+      Math.cos(δ) - Math.sin(φ1) * Math.sin(φ2)
+    );
+  return [(φ2 * 180) / Math.PI, (λ2 * 180) / Math.PI];
+}
+
+/** Regular polygon vertices as [lat,lng]; first vertex points north. */
+function regularPolygonLatLngs(centerLat, centerLng, radiusMeters, sides) {
+  const start = -Math.PI / 2;
+  const verts = [];
+  for (let i = 0; i < sides; i++) {
+    const brg = start + (i / sides) * 2 * Math.PI;
+    verts.push(destinationLatLng(centerLat, centerLng, brg, radiusMeters));
+  }
+  return verts;
+}
+
+function collectExteriorVerticesLatLng(geom) {
+  if (!geom || !geom.coordinates) return [];
+  if (geom.type === 'Polygon') {
+    return geom.coordinates[0].map(([lng, lat]) => [lat, lng]);
+  }
+  if (geom.type === 'MultiPolygon') {
+    const verts = [];
+    for (const poly of geom.coordinates) {
+      poly[0].forEach(([lng, lat]) => verts.push([lat, lng]));
+    }
+    return verts;
+  }
+  return [];
+}
+
+/**
+ * Larger regular pentagon wrapping the geometry (centroid + max vertex distance × scale).
+ * Rentals still use true polygons elsewhere — this is display only.
+ */
+function pentagonRingFromGeometry(geom) {
+  const verts = collectExteriorVerticesLatLng(geom);
+  if (verts.length < 3) return null;
+  let clat = 0;
+  let clng = 0;
+  verts.forEach(([la, ln]) => {
+    clat += la;
+    clng += ln;
+  });
+  clat /= verts.length;
+  clng /= verts.length;
+  let maxR = 0;
+  verts.forEach(([la, ln]) => {
+    maxR = Math.max(maxR, haversineDistance(clat, clng, la, ln));
+  });
+  const radiusM = Math.max(maxR * PENTAGON_RADIUS_SCALE, PENTAGON_MIN_RADIUS_M);
+  return regularPolygonLatLngs(clat, clng, radiusM, PENTAGON_SIDES);
 }
 
 // Pre-compute which school names have at least one rental in their catchment.
@@ -345,6 +418,15 @@ export default function MapView({
         'Data by <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, under ODbL.'
       )
       .addTo(map);
+    // Improve SR context for attribution links injected by Leaflet.
+    setTimeout(() => {
+      const links = map.getContainer().querySelectorAll('.leaflet-control-attribution a');
+      links.forEach((link) => {
+        const label = link.textContent?.trim();
+        if (!label) return;
+        link.setAttribute('aria-label', `${label} attribution link`);
+      });
+    }, 0);
     const tileLayer = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_nolabels/{z}/{x}/{y}.png', {
       subdomains: 'abc',
       maxZoom: 20,
@@ -497,8 +579,8 @@ export default function MapView({
       // Type filter
       if (!matchesTypeFilter(schoolType, boardFilter, languageFilter)) return;
 
-      // Grade level filter
-      if ((gradeLevelFilter === 'jk6' || gradeLevelFilter === 'grade78') && !ELEMENTARY_TYPES.has(schoolType)) return;
+      // Grade level filter (JK–8 ≈ elementary types in board data)
+      if (gradeLevelFilter === 'jk8' && !ELEMENTARY_TYPES.has(schoolType)) return;
       if (gradeLevelFilter === 'secondary' && !SECONDARY_TYPES.has(schoolType)) return;
 
       // Rating filter: unrated schools always show unless we explicitly need a rating
@@ -569,6 +651,7 @@ export default function MapView({
         weight: 2.5,
         opacity: 1,
         fillOpacity: 0.06,
+        dashArray: CATCHMENT_DASH_ARRAY,
       });
     } else if (selectedSchool) {
       const colors = (() => {
@@ -580,9 +663,10 @@ export default function MapView({
       })();
       catchmentLayerRef.current.setStyle({
         color: colors.color,
-        weight: 1.5,
+        weight: CATCHMENT_OUTLINE_WEIGHT,
         opacity: 1,
         fillOpacity: 1,
+        dashArray: CATCHMENT_DASH_ARRAY,
       });
     }
   }, [exploreRentalsMode, selectedSchool]);
@@ -612,8 +696,8 @@ export default function MapView({
     rentalLayersRef.current.forEach(l => map.removeLayer(l));
     rentalLayersRef.current = [];
 
-    // Pan to school
-    map.setView([lat, lng], Math.max(map.getZoom(), 14), { animate: true });
+    // Pan only — zoom comes from fitBounds on the boundary (avoids zoom 14 then re-zoom)
+    map.panTo([lat, lng], { animate: true });
 
     // Highlight ring around selected school marker
     const highlight = L.circleMarker([lat, lng], {
@@ -663,12 +747,12 @@ export default function MapView({
         if (result) {
           drawBoundaryPolygon(map, result.feature, result.boardHint);
         } else {
-          drawFallbackCircle(map, lat, lng);
+          drawFallbackPentagon(map, lat, lng);
         }
       })
       .catch(() => {
         if (selectionTokenRef.current === token) {
-          drawFallbackCircle(map, lat, lng);
+          drawFallbackPentagon(map, lat, lng);
         }
       });
 
@@ -855,13 +939,13 @@ export default function MapView({
       });
     }
 
-    function drawCatchmentMask(catchmentCoords) {
-      // World-covering polygon with the catchment punched out as a hole
+    /** Dim outside using the same ring shown for the catchment (pentagon). */
+    function drawCatchmentMaskFromLatLngRing(ringLatLng) {
+      const closed = [...ringLatLng, ringLatLng[0]];
+      const holeRing = closed.map(([latt, lng]) => [lng, latt]).reverse();
       const worldRing = [
         [90, -180], [90, 180], [-90, 180], [-90, -180], [90, -180],
-      ].map(([lat, lng]) => [lat, lng]);
-      // Catchment ring: swap [lng,lat] → [lat,lng] and reverse winding for hole
-      const holeRing = catchmentCoords[0].map(([lng, latt]) => [latt, lng]).reverse();
+      ];
       const mask = L.polygon([worldRing, holeRing], {
         color: 'transparent',
         fillColor: '#0f172a',
@@ -885,43 +969,80 @@ export default function MapView({
 
       const colors = getRatingZoneColors(selectedSchool ? selectedSchool.rating : null);
 
-      // Draw dim mask first (behind the boundary line)
       const geom = feature.geometry;
-      if (geom && geom.type === 'Polygon' && geom.coordinates) {
-        drawCatchmentMask(geom.coordinates);
+      const pentRing = geom ? pentagonRingFromGeometry(geom) : null;
+
+      if (!pentRing) {
+        const layer = L.geoJSON(feature, {
+          style: {
+            color: colors.color,
+            weight: CATCHMENT_OUTLINE_WEIGHT,
+            fillColor: colors.fillColor,
+            fillOpacity: 1,
+            dashArray: CATCHMENT_DASH_ARRAY,
+          },
+        }).addTo(map);
+        catchmentLayerRef.current = layer;
+        try {
+          const bounds = layer.getBounds();
+          if (bounds.isValid()) {
+            map.fitBounds(bounds, {
+              padding: CATCHMENT_FIT_PADDING,
+              maxZoom: CATCHMENT_FIT_MAX_ZOOM,
+            });
+          }
+        } catch (e) { /* ignore */ }
+        showNearbyRentals(name, lat, lng, token);
+        return;
       }
 
-      const layer = L.geoJSON(feature, {
-        style: {
-          color: colors.color,
-          weight: 1.5,
-          fillColor: colors.fillColor,
-          fillOpacity: 1,
-          dashArray: null,
-        },
+      drawCatchmentMaskFromLatLngRing(pentRing);
+
+      const layer = L.polygon(pentRing, {
+        color: colors.color,
+        weight: CATCHMENT_OUTLINE_WEIGHT,
+        opacity: 1,
+        fillColor: colors.fillColor,
+        fillOpacity: 1,
+        dashArray: CATCHMENT_DASH_ARRAY,
       }).addTo(map);
       catchmentLayerRef.current = layer;
 
       try {
         const bounds = layer.getBounds();
         if (bounds.isValid()) {
-          map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+          map.fitBounds(bounds, {
+            padding: CATCHMENT_FIT_PADDING,
+            maxZoom: CATCHMENT_FIT_MAX_ZOOM,
+          });
         }
       } catch (e) { /* ignore */ }
 
       showNearbyRentals(name, lat, lng, token);
     }
 
-    function drawFallbackCircle(map, lat, lng) {
-      const circle = L.circle([lat, lng], {
-        radius: 500,
-        color: '#2563eb',
-        weight: 2,
-        fillColor: '#93c5fd',
-        fillOpacity: 0.2,
-        dashArray: '6 4',
+    function drawFallbackPentagon(map, lat, lng) {
+      const colors = getRatingZoneColors(selectedSchool ? selectedSchool.rating : null);
+      const pentRing = regularPolygonLatLngs(lat, lng, FALLBACK_PENTAGON_RADIUS_M, PENTAGON_SIDES);
+      drawCatchmentMaskFromLatLngRing(pentRing);
+      const layer = L.polygon(pentRing, {
+        color: colors.color,
+        weight: CATCHMENT_OUTLINE_WEIGHT,
+        opacity: 1,
+        fillColor: colors.fillColor,
+        fillOpacity: 1,
+        dashArray: CATCHMENT_DASH_ARRAY,
       }).addTo(map);
-      circleLayerRef.current = circle;
+      catchmentLayerRef.current = layer;
+      try {
+        const b = layer.getBounds();
+        if (b.isValid()) {
+          map.fitBounds(b, {
+            padding: CATCHMENT_FIT_PADDING,
+            maxZoom: CATCHMENT_FIT_MAX_ZOOM,
+          });
+        }
+      } catch (e) { /* ignore */ }
       showNearbyRentals(name, lat, lng, token);
     }
   }, [selectedSchool, boundaryStatus]);
@@ -1156,4 +1277,5 @@ async function fetchBoundaryOnDemand(schoolName, school) {
   return null;
 }
 
-export { haversineDistance, rentalsData };
+export { rentalsData };
+export { haversineDistance } from '../utils/geo';

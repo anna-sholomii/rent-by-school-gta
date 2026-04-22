@@ -115,7 +115,7 @@ export default function SchoolPanel({
     return (
       <div className="panel school-panel">
         {onShareClick && (
-          <button className="panel__share-btn" onClick={onShareClick} aria-label="Share">
+          <button className="panel__share-btn" onClick={onShareClick} aria-label="Share school link">
             <Share2 size={16} />
           </button>
         )}
@@ -124,31 +124,46 @@ export default function SchoolPanel({
           <span className="panel__rental-mode-count">{nearbyRentals.length} rental{nearbyRentals.length !== 1 ? 's' : ''}</span>
           <button className="panel__close panel__close--inline" onClick={onClose} aria-label="Close">✕</button>
         </div>
+        <div className="panel__neighbourhood-note" role="note" aria-label="Catchment verification notice">
+          <MapPin className="panel__neighbourhood-note-icon" size={14} color="var(--mute)" />
+          <span>
+            Rentals shown here are inside this catchment boundary, not just nearby.
+            Verify your exact address on the school board site before signing a lease.
+          </span>
+        </div>
         {hasRentals ? (
           <ul className="panel__rental-list">
             {nearbyRentals.map(r => (
-              <li key={r.id} className="panel__rental-item" onClick={() => onRentalClick && onRentalClick(r)}>
-                {r.imageUrl && (
-                  <img className="panel__rental-photo" src={r.imageUrl} alt={r.address} loading="lazy" />
-                )}
-                <div className="panel__rental-body">
-                  <div className="panel__rental-address">{r.address}</div>
-                  <div className="panel__rental-neighbourhood">{r.neighbourhood}</div>
-                  <div className="panel__rental-meta">
-                    <span className="panel__rental-price">${r.price.toLocaleString()}/mo</span>
-                    <span className="panel__rental-beds">{r.bedrooms}bd · {r.bathrooms}ba</span>
-                    <span className="panel__rental-type">{r.type}</span>
-                  </div>
-                  {r.distance != null && (
-                    <div className="panel__rental-distance">~{walkMinutes(r.distance)} min walk</div>
+              <li key={r.id} className="panel__rental-item">
+                <button
+                  type="button"
+                  className="school-list__item-inner"
+                  onClick={() => onRentalClick && onRentalClick(r)}
+                  aria-label={`Open rental details for ${r.address}`}
+                  style={{ display: 'block', width: '100%', border: 'none', background: 'transparent', padding: 0, textAlign: 'left' }}
+                >
+                  {r.imageUrl && (
+                    <img className="panel__rental-photo" src={r.imageUrl} alt={r.address} loading="lazy" />
                   )}
-                </div>
+                  <div className="panel__rental-body">
+                    <div className="panel__rental-address">{r.address}</div>
+                    <div className="panel__rental-neighbourhood">{r.neighbourhood}</div>
+                    <div className="panel__rental-meta">
+                      <span className="panel__rental-price">${r.price.toLocaleString()}/mo</span>
+                      <span className="panel__rental-beds">{r.bedrooms}bd · {r.bathrooms}ba</span>
+                      <span className="panel__rental-type">{r.type}</span>
+                      <span className="panel__rental-type">Opens details in app</span>
+                    </div>
+                    {r.distance != null && (
+                      <div className="panel__rental-distance">~{walkMinutes(r.distance)} min walk</div>
+                    )}
+                  </div>
+                </button>
               </li>
             ))}
           </ul>
         ) : (
           <div className="sidebar__empty-state">
-            <span className="sidebar__empty-icon">🏠</span>
             <p className="sidebar__empty-text">No rentals found inside this catchment right now.</p>
             <button className="panel__try-nearby-btn" onClick={onClose}>
               Try a nearby school →
@@ -164,17 +179,18 @@ export default function SchoolPanel({
     <div className="panel school-panel">
       <button className="panel__close" onClick={onClose} aria-label="Close school panel">✕</button>
       {onShareClick && (
-        <button className="panel__share-btn" onClick={onShareClick} aria-label="Share">
+        <button className="panel__share-btn" onClick={onShareClick} aria-label="Share school link">
           <Share2 size={16} />
         </button>
       )}
 
-      <img
-        src={getSchoolPhoto(props.NAME || name)}
-        alt={displayName}
-        className="panel__photo"
-        style={{ width: '100%', objectFit: 'cover', display: 'block' }}
-      />
+      <div className="school-panel__hero">
+        <img
+          src={getSchoolPhoto(props.NAME || name)}
+          alt={displayName}
+          className="school-panel__hero-img"
+        />
+      </div>
 
       <div className="panel__overview-body">
         {/* Type / language badges */}
@@ -245,13 +261,31 @@ export default function SchoolPanel({
             )}
 
             <div className="score-links">
-              <a className="score-link" href="https://www.tdsb.on.ca/Find-your/Schools" target="_blank" rel="noopener noreferrer">
+              <a
+                className="score-link"
+                href="https://www.tdsb.on.ca/Find-your/Schools"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open TDSB school profile in a new tab"
+              >
                 TDSB profile ↗
               </a>
-              <a className="score-link" href={`https://www.ourkids.net/school/search/?q=${ourkidsQuery}`} target="_blank" rel="noopener noreferrer">
+              <a
+                className="score-link"
+                href={`https://www.ourkids.net/school/search/?q=${ourkidsQuery}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open parent reviews in a new tab"
+              >
                 Parent reviews ↗
               </a>
-              <a className="score-link" href={`https://www.fraserinstitute.org/school-performance`} target="_blank" rel="noopener noreferrer">
+              <a
+                className="score-link"
+                href={`https://www.fraserinstitute.org/school-performance`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open Fraser full report in a new tab"
+              >
                 Fraser full report ↗
               </a>
             </div>
@@ -269,7 +303,13 @@ export default function SchoolPanel({
         )}
 
         {website && (
-          <a className="panel__website-btn" href={website} target="_blank" rel="noopener noreferrer">
+          <a
+            className="panel__website-btn"
+            href={website}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open school website in a new tab"
+          >
             Visit School Website →
           </a>
         )}
@@ -313,6 +353,12 @@ export default function SchoolPanel({
             <span className="panel__locating">↗ Locating…</span>
           )}
         </div>
+        <div className="panel__neighbourhood-note" role="note" aria-label="Catchment verification notice">
+          <MapPin className="panel__neighbourhood-note-icon" size={14} color="var(--mute)" />
+          <span>
+            Listings are filtered to this school catchment. Always verify the exact address with TDSB or TCDSB before committing.
+          </span>
+        </div>
 
       </div>
 
@@ -322,7 +368,7 @@ export default function SchoolPanel({
           onClick={() => hasRentals && onExploreRentals && onExploreRentals()}
           disabled={!hasRentals}
         >
-          {hasRentals ? 'Explore rentals →' : 'No rentals in catchment'}
+          {hasRentals ? '3. Explore rentals in catchment →' : 'No rentals in catchment'}
         </button>
       </div>
     </div>

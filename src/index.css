@@ -26,15 +26,41 @@ html, body, #root {
 
 /* ── Focus rings (WCAG 2.4.7 / 2.4.11) ───────────────────────────────────── */
 .qbtn:focus-visible,
+.qbtn:focus,
 .panel__explore-btn:focus-visible,
+.panel__explore-btn:focus,
 .panel__share-btn:focus-visible,
+.panel__share-btn:focus,
 .panel__close:focus-visible,
+.panel__close:focus,
 .segmented-btn:focus-visible,
+.segmented-btn:focus,
 .mtf-pill:focus-visible,
+.mtf-pill:focus,
 .choose-school-fab:focus-visible,
-.view-toggle__btn:focus-visible {
-  outline: 2px solid var(--accent, #2f6b4f);
-  outline-offset: 2px;
+.choose-school-fab:focus,
+.view-toggle__btn:focus-visible,
+.view-toggle__btn:focus {
+  outline: 3px solid var(--accent, #2f6b4f) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 2px rgba(47, 107, 79, 0.25) !important;
+}
+
+button:focus-visible,
+button:focus,
+a:focus-visible,
+a:focus,
+input:focus-visible,
+input:focus,
+select:focus-visible,
+select:focus,
+textarea:focus-visible,
+textarea:focus,
+[tabindex]:focus-visible,
+[tabindex]:focus {
+  outline: 3px solid var(--accent, #2f6b4f) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 2px rgba(47, 107, 79, 0.25) !important;
 }
 
 /* ── Tap targets (WCAG 2.5.5 – 44 × 44 px minimum) ──────────────────────── */
@@ -100,7 +126,10 @@ html, body, #root {
 }
 
 @media (max-width: 768px) {
-  .school-list__items { max-height: 50vh; }
+  .school-list__items {
+    max-height: calc(100dvh - 220px);
+    padding-bottom: 12px;
+  }
 }
 
 .school-list__item-inner {

@@ -90,7 +90,7 @@ export default function PurposeChip() {
           padding: '8px 8px 8px 14px',
           boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
           whiteSpace: 'nowrap',
-          pointerEvents: 'auto',
+          pointerEvents: 'none',
         }}
       >
         <MapPin size={15} color="#4CAF50" strokeWidth={2.5} aria-hidden />
@@ -102,6 +102,7 @@ export default function PurposeChip() {
         )}
 
         <button
+          className="purpose-chip__toggle"
           aria-expanded={open}
           aria-controls="how-it-works-panel"
           onClick={() => setOpen((o) => !o)}
@@ -120,6 +121,7 @@ export default function PurposeChip() {
             gap: 4,
             fontFamily: 'inherit',
             transition: 'background 0.15s',
+            pointerEvents: 'auto',
           }}
           onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(0,0,0,0.10)')}
           onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(0,0,0,0.06)')}
@@ -215,6 +217,7 @@ export default function PurposeChip() {
                 How Rent by School works
               </h2>
               <button
+                className="purpose-chip__close"
                 aria-label="Close how it works panel"
                 onClick={close}
                 style={{

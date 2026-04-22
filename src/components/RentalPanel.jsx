@@ -19,7 +19,7 @@ export default function RentalPanel({ rental, assignedSchool, previousSchool, on
       {rental.photo
         ? <img src={rental.photo} alt={rental.address} className="panel__photo panel__photo--rental"
             style={{ width: '100%', height: '200px', objectFit: 'cover', display: 'block' }} />
-        : <div className="panel__photo panel__photo--rental"><span className="panel__photo-icon">🏠</span></div>
+        : <div className="panel__photo panel__photo--rental"><span className="panel__photo-icon" aria-hidden="true">Home</span></div>
       }
 
       <div className="panel__header">
@@ -49,8 +49,14 @@ export default function RentalPanel({ rental, assignedSchool, previousSchool, on
       </div>
 
       {rental.url && (
-        <a className="panel__website-btn" href={rental.url} target="_blank" rel="noopener noreferrer">
-          View Listing →
+        <a
+          className="panel__website-btn"
+          href={rental.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Open rental partner listing in a new tab"
+        >
+          View listing on partner site →
         </a>
       )}
 

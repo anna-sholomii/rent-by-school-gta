@@ -13,9 +13,9 @@ const LANGUAGES = [
 ];
 
 const GRADE_LEVELS = [
-  { label: 'All Grades', value: 'all' },
-  { label: 'JK – Grade 8', value: 'elementary' },
-  { label: 'Grade 9 – Grade 12', value: 'secondary' },
+  { label: 'JK–8', value: 'jk8' },
+  { label: '9–12', value: 'secondary' },
+  { label: 'All', value: 'all' },
 ];
 
 const RATING_BADGES = [
@@ -33,7 +33,7 @@ export default function OnboardingModal({ onDone }) {
   const [ratingMax, setRatingMax] = useState(10);
   const [boardType, setBoardType] = useState('all');
   const [language, setLanguage] = useState('all');
-  const [grade, setGrade] = useState('all');
+  const [grade, setGrade] = useState('jk8');
   const [budgetMin, setBudgetMin] = useState(BUDGET_MIN);
   const [budgetMax, setBudgetMax] = useState(BUDGET_MAX);
 
@@ -49,7 +49,7 @@ export default function OnboardingModal({ onDone }) {
   return (
     <div className="ob-overlay">
       <div className="ob-modal">
-        <div className="ob-logo">🏫</div>
+        <div className="ob-logo" aria-hidden="true">SB</div>
         <h1 className="ob-title">Rent by School - Toronto</h1>
         <p className="ob-subtitle">Find the rentals close to the best schools</p>
 
