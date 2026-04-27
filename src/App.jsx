@@ -418,10 +418,10 @@ export default function App() {
       {/* Skip link — visually hidden until focused, for keyboard/screen-reader users */}
       <a href="#school-list" className="skip-link">Skip to school list</a>
 
-      <div className="app__body">
-        {/* Left column: full height from top — brand, search, school / rental detail */}
-      <div className={`app__sidebar${(selectedSchool || selectedRental) ? ' app__sidebar--expanded' : ''}${showSchoolList && !selectedSchool && !selectedRental ? ' app__sidebar--full' : ''}`}>
+      {/* Top bar: filters always visible above the map */}
+      <div className="app__topbar">
         <FilterBar
+          topBarMode
           ratingMin={ratingMin}
           ratingMax={ratingMax}
           onRatingMinChange={setRatingMin}
@@ -445,7 +445,6 @@ export default function App() {
           onExploreMapHint={() =>
             showToast('Pan and zoom the map, then tap a school pin — or keep searching by name above.')
           }
-          onApplyFilters={() => setShowSchoolList(true)}
           rentalExploreMode={rentalExploreMode}
           budgetMin={budgetMin}
           budgetMax={budgetMax}
@@ -463,49 +462,45 @@ export default function App() {
           rentalAmenities={rentalAmenities}
           onRentalAmenitiesToggle={handleRentalAmenitiesToggle}
         />
-        {/* Scrollable content below header */}
-        <div className="app__sidebar-content">
-          {/* Desktop: Map ↔ Schools list toggle (hidden when a panel is open) */}
-
-          {selectedSchool && rentalExploreMode && listView ? (
-            <RentalListView
-              rentals={nearbyRentals}
-              onRentalClick={handleRentalClick}
-              sort={rentalSort}
-              onSortChange={setRentalSort}
-            />
-          ) : selectedSchool && (
-            <SchoolPanel
-              school={selectedSchool}
-              nearbyRentals={nearbyRentals}
-              onClose={() => { setSelectedSchool(null); setRentalExploreMode(false); }}
-              onRentalClick={handleRentalClick}
-              rentalMode={rentalExploreMode}
-              onExploreRentals={handleExploreRentals}
-              onBackToOverview={handleBackToOverview}
-              onShareClick={handleShare}
-            />
-          )}
-          {selectedRental && (
-            <RentalPanel
-              rental={selectedRental}
-              assignedSchool={assignedSchool}
-              previousSchool={previousSchool}
-              onClose={() => { setSelectedRental(null); setPreviousSchool(null); }}
-              onSchoolClick={handleSchoolClick}
-              onBackToSchool={handleBackToSchool}
-            />
-          )}
-          {!selectedSchool && !selectedRental && showSchoolList && (
-            <SchoolList schools={filteredSchools} onSchoolSelect={handleSchoolClick} />
-          )}
-          {!selectedSchool && !selectedRental && !showSchoolList && (
-            <div className="sidebar__empty-state">
-              <p className="sidebar__empty-text">Click a school pin to see nearby rentals in its catchment</p>
-            </div>
-          )}
-        </div>
       </div>
+
+      <div className="app__body">
+        {/* Left sidebar: only visible when a school or rental is selected */}
+        {(selectedSchool || selectedRental) && (
+          <div className="app__sidebar">
+            <div className="app__sidebar-content">
+              {selectedSchool && rentalExploreMode && listView ? (
+                <RentalListView
+                  rentals={nearbyRentals}
+                  onRentalClick={handleRentalClick}
+                  sort={rentalSort}
+                  onSortChange={setRentalSort}
+                />
+              ) : selectedSchool && (
+                <SchoolPanel
+                  school={selectedSchool}
+                  nearbyRentals={nearbyRentals}
+                  onClose={() => { setSelectedSchool(null); setRentalExploreMode(false); }}
+                  onRentalClick={handleRentalClick}
+                  rentalMode={rentalExploreMode}
+                  onExploreRentals={handleExploreRentals}
+                  onBackToOverview={handleBackToOverview}
+                  onShareClick={handleShare}
+                />
+              )}
+              {selectedRental && (
+                <RentalPanel
+                  rental={selectedRental}
+                  assignedSchool={assignedSchool}
+                  previousSchool={previousSchool}
+                  onClose={() => { setSelectedRental(null); setPreviousSchool(null); }}
+                  onSchoolClick={handleSchoolClick}
+                  onBackToSchool={handleBackToSchool}
+                />
+              )}
+            </div>
+          </div>
+        )}
 
       <div className="app__map">
         {/* "How it works" chip — always visible on map */}

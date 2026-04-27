@@ -178,6 +178,197 @@
   overflow: hidden;
 }
 
+/* ── Top bar ─────────────────────────────────── */
+.app__topbar {
+  flex-shrink: 0;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  z-index: 100;
+}
+
+.topbar-filters {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 16px;
+  height: 56px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-right: 16px;
+}
+
+.topbar-brand__logo {
+  display: block;
+  width: 26px;
+  height: auto;
+  flex-shrink: 0;
+}
+
+.topbar-brand__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.topbar-search-wrap {
+  position: relative;
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
+.topbar-search-field {
+  position: relative;
+}
+
+.topbar-search {
+  width: 200px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  padding: 7px 32px 7px 12px;
+  font-size: 13px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.topbar-search:focus {
+  border-color: rgba(47, 107, 79, 0.45);
+  box-shadow: 0 0 0 3px var(--accent-muted);
+}
+
+.topbar-search::placeholder { color: #b8b8b6; }
+
+.topbar-search-clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.07);
+  color: var(--ink-2);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.topbar-search-clear:hover { background: rgba(15, 23, 42, 0.13); }
+
+.topbar-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 280px;
+  background: #fff;
+  border: 1.5px solid var(--accent);
+  border-radius: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  z-index: 9999;
+  max-height: 260px;
+  overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.topbar-search-empty {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 260px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #64748b;
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  z-index: 9999;
+}
+
+.topbar-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--line);
+  flex-shrink: 0;
+  margin: 0 12px;
+}
+
+.topbar-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex-shrink: 0;
+  padding: 0 10px;
+}
+
+.topbar-filter-group--rating {
+  min-width: 130px;
+}
+
+.topbar-filter-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.topbar-rating-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.topbar-rating-value {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.topbar-rating-slider {
+  margin: 0;
+}
+
+.topbar-reset-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: var(--accent-soft);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.topbar-reset-btn:hover { background: var(--accent-muted); }
+
+/* ── End top bar ─────────────────────────────── */
+
 .app__body {
   display: flex;
   flex-direction: row;
@@ -190,8 +381,8 @@
   width: var(--sidebar-width);
   min-width: 300px;
   flex-shrink: 0;
-  background: var(--bg);
-  overflow: hidden; /* content area scrolls independently */
+  background: var(--card);
+  overflow: hidden;
   z-index: 10;
   display: flex;
   flex-direction: column;
@@ -199,7 +390,7 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* Scrollable panel area below the header */
+/* Scrollable panel area */
 .app__sidebar-content {
   flex: 1;
   overflow-y: auto;
@@ -981,6 +1172,68 @@
 .panel__share-btn:hover {
   background: var(--line);
   color: var(--ink);
+}
+
+/* Overlaid close/share/back buttons sitting ON TOP of the hero photo */
+.panel__close--on-photo,
+.panel__share-btn--on-photo {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(6px);
+  border: none;
+}
+
+.panel__close--on-photo {
+  top: 10px;
+  right: 10px;
+}
+
+.panel__share-btn--on-photo {
+  top: 10px;
+  right: 46px;
+}
+
+.panel__close--on-photo:hover,
+.panel__share-btn--on-photo:hover {
+  background: rgba(255, 255, 255, 0.97);
+}
+
+/* Photo wrap for rental panel — position:relative so overlaid buttons work */
+.panel__photo-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.panel__back-btn--on-photo {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(6px);
+  border: none;
+  border-bottom: none;
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  z-index: 3;
+  width: auto;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  transition: background 0.15s;
+}
+
+.panel__back-btn--on-photo:hover {
+  background: rgba(255, 255, 255, 0.97);
+}
+
+.panel__photo--placeholder {
+  height: 160px;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .panel__photo {

@@ -6,21 +6,20 @@ export default function RentalPanel({ rental, assignedSchool, previousSchool, on
 
   return (
     <div className="panel rental-panel">
-      <button className="panel__close" onClick={onClose} aria-label="Close rental panel">✕</button>
-
-      {/* Back to school navigation */}
-      {previousSchool && (
-        <button className="panel__back-btn" onClick={onBackToSchool}>
-          ← {toTitleCase(previousSchool.name)}
-        </button>
-      )}
-
-      {/* Rental photo */}
-      {rental.photo
-        ? <img src={rental.photo} alt={rental.address} className="panel__photo panel__photo--rental"
-            style={{ width: '100%', height: '200px', objectFit: 'cover', display: 'block' }} />
-        : <div className="panel__photo panel__photo--rental"><span className="panel__photo-icon" aria-hidden="true">Home</span></div>
-      }
+      {/* Rental photo with overlaid nav buttons */}
+      <div className="panel__photo-wrap">
+        {rental.photo
+          ? <img src={rental.photo} alt={rental.address} className="panel__photo panel__photo--rental"
+              style={{ width: '100%', height: '200px', objectFit: 'cover', display: 'block' }} />
+          : <div className="panel__photo panel__photo--rental panel__photo--placeholder"><span className="panel__photo-icon" aria-hidden="true">🏠</span></div>
+        }
+        <button className="panel__close panel__close--on-photo" onClick={onClose} aria-label="Close rental panel">✕</button>
+        {previousSchool && (
+          <button className="panel__back-btn panel__back-btn--on-photo" onClick={onBackToSchool}>
+            ← {toTitleCase(previousSchool.name)}
+          </button>
+        )}
+      </div>
 
       <div className="panel__header">
         <h2 className="panel__name">{rental.address}</h2>

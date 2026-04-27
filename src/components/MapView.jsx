@@ -651,15 +651,15 @@ export default function MapView({
     }
   }, [exploreRentalsMode]);
 
-  // Hide Fraser legend while in explore-rentals mode (#9)
+  // Hide Fraser legend when a school or rental is selected, or in explore-rentals mode
   useEffect(() => {
     if (!mapInstanceRef.current || !legendRef.current) return;
-    if (exploreRentalsMode) {
+    if (exploreRentalsMode || selectedSchool || selectedRental) {
       legendRef.current.remove();
     } else {
       legendRef.current.addTo(mapInstanceRef.current);
     }
-  }, [exploreRentalsMode]);
+  }, [exploreRentalsMode, selectedSchool, selectedRental]);
 
   // Update catchment polygon border prominence when rental explore mode changes
   useEffect(() => {

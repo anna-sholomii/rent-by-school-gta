@@ -63,6 +63,7 @@ const BUDGET_MIN = 1500;
 const BUDGET_MAX = 5000;
 
 export default function FilterBar({
+  topBarMode = false,
   ratingMin, ratingMax, onRatingMinChange, onRatingMaxChange,
   boardFilter, onBoardFilterChange,
   languageFilter, onLanguageFilterChange,
@@ -211,6 +212,134 @@ export default function FilterBar({
     : (selectedSchoolId != null && !filtersOpen
       ? 'Filters are tucked away while you view a school — expand to change the map'
       : undefined);
+
+  if (topBarMode) {
+    return (
+      <div className="topbar-filters" ref={searchRef}>
+        {/* Brand */}
+        <div className="topbar-brand">
+          <img src="/logo.svg" className="topbar-brand__logo" alt="" aria-hidden="true" width="28" height="32" />
+          <span className="topbar-brand__title">Rent by School</span>
+        </div>
+
+        {/* School search */}
+        <div className="topbar-search-wrap">
+          <div className="topbar-search-field">
+            <input
+              id="topbar-school-search"
+              type="text"
+              className="topbar-search"
+              placeholder="Search school…"
+              value={schoolSearch}
+              onChange={e => { onSchoolSearchChange(e.target.value); setShowSuggestions(true); }}
+              onFocus={() => setShowSuggestions(true)}
+              onKeyDown={handleSearchKeyDown}
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded={showSuggestions && (suggestions.length > 0 || showNoResults)}
+              aria-controls={showNoResults ? 'topbar-search-empty-msg' : listboxId}
+              aria-label="Search schools"
+              aria-activedescendant={
+                activeSuggestionIndex >= 0 && suggestions[activeSuggestionIndex]
+                  ? `school-option-${suggestions[activeSuggestionIndex].id}`
+                  : undefined
+              }
+            />
+            {queryTrim.length > 0 && (
+              <button type="button" className="topbar-search-clear" onClick={handleClearSearch} aria-label="Clear school search">×</button>
+            )}
+          </div>
+          {showSuggestions && suggestions.length > 0 && (
+            <ul className="topbar-suggestions" id={listboxId} role="listbox" ref={suggestionsRef}>
+              {suggestions.map((s, idx) => (
+                <li
+                  key={s.id}
+                  id={`school-option-${s.id}`}
+                  className="sidebar-suggestion"
+                  role="option"
+                  aria-selected={idx === activeSuggestionIndex}
+                  onMouseDown={() => handleSelect(s)}
+                >
+                  <span className="sidebar-suggestion__name">{toTitleCase(s.name)}</span>
+                  {s.rating != null && (
+                    <span className="sidebar-suggestion__meta">{s.rating.toFixed(1)} Fraser · {s.properties?.SCHOOL_TYPE_DESC}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          {showSuggestions && showNoResults && (
+            <div className="topbar-search-empty" id="topbar-search-empty-msg" role="status">
+              No schools match &ldquo;{debouncedQuery.trim()}&rdquo;
+            </div>
+          )}
+        </div>
+
+        {/* School filters — always visible in top bar */}
+        <div className="topbar-divider" aria-hidden="true" />
+
+        <div className="topbar-filter-group">
+          <span className="topbar-filter-label">Board</span>
+          <div className="segmented-control segmented-control--compact">
+            {BOARD_TYPES.map(t => (
+              <button key={t.value} type="button"
+                className={`segmented-btn${boardFilter === t.value ? ' active' : ''}`}
+                onClick={() => onBoardFilterChange(t.value)}
+              >{t.label}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="topbar-filter-group">
+          <span className="topbar-filter-label">Language</span>
+          <div className="segmented-control segmented-control--compact">
+            {LANGUAGES.map(t => (
+              <button key={t.value} type="button"
+                className={`segmented-btn${languageFilter === t.value ? ' active' : ''}`}
+                onClick={() => onLanguageFilterChange(t.value)}
+              >{t.label}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="topbar-filter-group">
+          <span className="topbar-filter-label">Grade</span>
+          <div className="segmented-control segmented-control--compact">
+            {GRADE_LEVELS.map(t => (
+              <button key={t.value} type="button"
+                className={`segmented-btn${gradeLevelFilter === t.value ? ' active' : ''}`}
+                onClick={() => onGradeLevelChange(t.value)}
+              >{t.label}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="topbar-filter-group topbar-filter-group--rating">
+          <div className="topbar-rating-head">
+            <span className="topbar-filter-label">Rating</span>
+            <span className="topbar-rating-value">{ratingMin}–{ratingMax}</span>
+          </div>
+          <div className="dual-slider topbar-rating-slider">
+            <div className="dual-slider__track">
+              <div className="dual-slider__fill" style={{ left: `${(ratingMin / 10) * 100}%`, right: `${100 - (ratingMax / 10) * 100}%` }} />
+            </div>
+            <input type="range" min={0} max={10} step={0.5} value={ratingMin}
+              onChange={e => onRatingMinChange(Math.min(Number(e.target.value), ratingMax - 0.5))}
+              className="dual-slider__input" aria-label="Minimum Fraser rating" />
+            <input type="range" min={0} max={10} step={0.5} value={ratingMax}
+              onChange={e => onRatingMaxChange(Math.max(Number(e.target.value), ratingMin + 0.5))}
+              className="dual-slider__input" aria-label="Maximum Fraser rating" />
+          </div>
+        </div>
+
+        {activeFilterCount > 0 && onResetFilters && (
+          <button type="button" className="topbar-reset-btn" onClick={onResetFilters} aria-label="Reset filters">
+            Reset
+          </button>
+        )}
+      </div>
+    );
+  }
 
   const hasSelection = !!(selectedSchool || selectedRental);
   if (hasSelection && !rentalExploreMode) return null;

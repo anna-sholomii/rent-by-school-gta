@@ -173,19 +173,18 @@ export default function SchoolPanel({
   /* ── School overview ── */
   return (
     <div className="panel school-panel">
-      <button className="panel__close" onClick={onClose} aria-label="Close school panel">✕</button>
-      {onShareClick && (
-        <button className="panel__share-btn" onClick={onShareClick} aria-label="Share school link">
-          <Share2 size={16} />
-        </button>
-      )}
-
       <div className="school-panel__hero">
         <img
           src={getSchoolPhoto(props.NAME || name)}
           alt={displayName}
           className="school-panel__hero-img"
         />
+        <button className="panel__close panel__close--on-photo" onClick={onClose} aria-label="Close school panel">✕</button>
+        {onShareClick && (
+          <button className="panel__share-btn panel__share-btn--on-photo" onClick={onShareClick} aria-label="Share school link">
+            <Share2 size={16} />
+          </button>
+        )}
       </div>
 
       <div className="panel__overview-body">
