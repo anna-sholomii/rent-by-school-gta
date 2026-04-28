@@ -58,6 +58,7 @@ function getNeighbourhoodNote(rating) {
 export default function SchoolPanel({
   school, nearbyRentals, onClose, onRentalClick,
   rentalMode, onExploreRentals, onBackToOverview, onShareClick,
+  lastViewedRentalId,
 }) {
   if (!school) return null;
 
@@ -130,7 +131,7 @@ export default function SchoolPanel({
         {hasRentals ? (
           <ul className="panel__rental-list">
             {nearbyRentals.map(r => (
-              <li key={r.id} className="panel__rental-item">
+              <li key={r.id} className={`panel__rental-item${r.id === lastViewedRentalId ? ' panel__rental-item--selected' : ''}`}>
                 <button
                   type="button"
                   className="school-list__item-inner"

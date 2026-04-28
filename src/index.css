@@ -41,9 +41,9 @@ html, body, #root {
 .choose-school-fab:focus,
 .view-toggle__btn:focus-visible,
 .view-toggle__btn:focus {
-  outline: 3px solid var(--accent, #2f6b4f) !important;
+  outline: 3px solid var(--accent, #334462) !important;
   outline-offset: 2px !important;
-  box-shadow: 0 0 0 2px rgba(47, 107, 79, 0.25) !important;
+  box-shadow: 0 0 0 2px rgba(51, 68, 98, 0.25) !important;
 }
 
 button:focus-visible,
@@ -58,9 +58,9 @@ textarea:focus-visible,
 textarea:focus,
 [tabindex]:focus-visible,
 [tabindex]:focus {
-  outline: 3px solid var(--accent, #2f6b4f) !important;
+  outline: 3px solid var(--accent, #334462) !important;
   outline-offset: 2px !important;
-  box-shadow: 0 0 0 2px rgba(47, 107, 79, 0.25) !important;
+  box-shadow: 0 0 0 2px rgba(51, 68, 98, 0.25) !important;
 }
 
 /* ── Tap targets (WCAG 2.5.5 – 44 × 44 px minimum) ──────────────────────── */
@@ -151,7 +151,7 @@ textarea:focus,
 .school-list__item-inner:hover { border-color: var(--ink, #1a1a1a); }
 
 .school-list__item-inner:focus-visible {
-  outline: 2px solid var(--accent, #2f6b4f);
+  outline: 2px solid var(--accent, #334462);
   outline-offset: 2px;
 }
 

@@ -125,6 +125,7 @@ export default function App() {
   const [rentalExploreMode, setRentalExploreMode] = useState(false);
   const [listView, setListView] = useState(false);
   const [rentalSort, setRentalSort] = useState('price-asc');
+  const [lastViewedRentalId, setLastViewedRentalId] = useState(null);
   const [showSchoolList, setShowSchoolList] = useState(false);
   const [loadedSchools, setLoadedSchools] = useState([]);
   const [filtersHydrated, setFiltersHydrated] = useState(false);
@@ -245,6 +246,7 @@ export default function App() {
     setPreviousSchool(selectedSchool);
     setSelectedSchool(null);
     setSelectedRental(rental);
+    setLastViewedRentalId(rental.id);
   }, [selectedSchool]);
 
   // Navigate back to the school we came from
@@ -486,6 +488,7 @@ export default function App() {
                   onExploreRentals={handleExploreRentals}
                   onBackToOverview={handleBackToOverview}
                   onShareClick={handleShare}
+                  lastViewedRentalId={lastViewedRentalId}
                 />
               )}
               {selectedRental && (
@@ -798,6 +801,7 @@ export default function App() {
           onRentalClick={handleRentalClick}
           selectedSchool={selectedSchool}
           selectedRental={selectedRental}
+          rentalSourceSchool={selectedRental ? previousSchool : null}
           onVisibleCountChange={handleVisibleCountChange}
           onSchoolsLoaded={handleSchoolsLoaded}
           exploreRentalsMode={rentalExploreMode}

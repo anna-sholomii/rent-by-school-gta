@@ -13,10 +13,10 @@
   --amber:   #FFC107;
   --orange:  #FF9800;
   --red:     #E53935;
-  --accent:  #2f6b4f;
-  --accent-soft: #eaf4ee;
-  --accent-muted: rgba(47, 107, 79, 0.12);
-  --accent-hover: #265c44;
+  --accent:  #334462;
+  --accent-soft: #eaecf2;
+  --accent-muted: rgba(51, 68, 98, 0.12);
+  --accent-hover: #273856;
   --sidebar-width: 340px;
   --radius-lg: 14px;
   --radius-xl: 18px;
@@ -214,8 +214,8 @@
 
 .topbar-brand__title {
   font-size: 14px;
-  font-weight: 700;
-  color: var(--ink);
+  font-weight: 600;
+  color: #334462;
   letter-spacing: -0.02em;
   white-space: nowrap;
 }
@@ -244,7 +244,7 @@
 }
 
 .topbar-search:focus {
-  border-color: rgba(47, 107, 79, 0.45);
+  border-color: rgba(51, 68, 98, 0.45);
   box-shadow: 0 0 0 3px var(--accent-muted);
 }
 
@@ -467,19 +467,21 @@
   min-width: min-content;
 }
 
-.top-filters-bar .segmented-btn.active {
-  background: var(--accent);
-  border-color: var(--accent);
+.top-filters-bar .segmented-btn.active,
+.topbar-filters .segmented-btn.active {
+  background: #334462;
+  border-color: #334462;
   color: #fff;
 }
 
-.top-filters-bar .segmented-btn:not(.active):hover {
-  border-color: rgba(47, 107, 79, 0.35);
+.top-filters-bar .segmented-btn:not(.active):hover,
+.topbar-filters .segmented-btn:not(.active):hover {
+  border-color: rgba(51, 68, 98, 0.35);
   background: var(--accent-soft);
 }
 
 .top-filters-bar .dual-slider__track {
-  background: rgba(47, 107, 79, 0.12);
+  background: rgba(51, 68, 98, 0.12);
 }
 
 .top-filters-bar .dual-slider__fill {
@@ -1632,6 +1634,11 @@
 .panel__rental-item:hover {
   border-color: var(--ink);
   transform: translateY(-1px);
+}
+
+.panel__rental-item--selected {
+  border-color: var(--accent, #3b82f6);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #3b82f6) 20%, transparent);
 }
 
 .panel__rental-photo {
@@ -3085,7 +3092,7 @@
   line-height: 1.5;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
-.attr-toggle__panel a { color: #2f6b4f; }
+.attr-toggle__panel a { color: #334462; }
 
 .sidebar-apply-btn {
   width: 100%;

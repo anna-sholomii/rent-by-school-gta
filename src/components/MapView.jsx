@@ -364,6 +364,7 @@ export default function MapView({
   budgetMin, budgetMax,
   onSchoolClick, onRentalClick,
   selectedSchool, selectedRental,
+  rentalSourceSchool,
   onVisibleCountChange,
   onSchoolsLoaded,
   exploreRentalsMode,
@@ -374,6 +375,7 @@ export default function MapView({
   const schoolLayersRef = useRef([]);
   const clusterGroupRef = useRef(null);
   const rentalLayersRef = useRef([]);
+  const rentalLayersMapRef = useRef({});
   const catchmentLayerRef = useRef(null);
   const circleLayerRef = useRef(null);
   const highlightLayerRef = useRef(null);
@@ -666,7 +668,7 @@ export default function MapView({
     if (!catchmentLayerRef.current) return;
     if (exploreRentalsMode) {
       catchmentLayerRef.current.setStyle({
-        color: '#2f6b4f',
+        color: '#334462',
         weight: 2.5,
         opacity: 1,
         fillOpacity: 0.06,
@@ -702,9 +704,13 @@ export default function MapView({
     if (maskLayerRef.current) { map.removeLayer(maskLayerRef.current); maskLayerRef.current = null; }
 
     if (!selectedSchool) {
-      rentalLayersRef.current.forEach(l => map.removeLayer(l));
-      rentalLayersRef.current = [];
-      onVisibleCountChange && onVisibleCountChange(null, 0);
+      // If transitioning to rental view, keep layers visible
+      if (!rentalSourceSchool) {
+        rentalLayersRef.current.forEach(l => map.removeLayer(l));
+        rentalLayersRef.current = [];
+        rentalLayersMapRef.current = {};
+        onVisibleCountChange && onVisibleCountChange(null, 0);
+      }
       return;
     }
 
@@ -714,6 +720,7 @@ export default function MapView({
     // Remove old rental markers
     rentalLayersRef.current.forEach(l => map.removeLayer(l));
     rentalLayersRef.current = [];
+    rentalLayersMapRef.current = {};
 
     // Pan only — zoom comes from fitBounds on the boundary (avoids zoom 14 then re-zoom)
     map.panTo([lat, lng], { animate: true });
@@ -886,7 +893,7 @@ export default function MapView({
         ? `<img src="${rental.imageUrl}" style="width:100%;height:80px;object-fit:cover;display:block;" />`
         : `<div style="width:100%;height:80px;background:#efefec;display:flex;align-items:center;justify-content:center;font-size:24px;">&#127968;</div>`;
       const bedsNum = rental.bedrooms ?? rental.beds ?? '';
-      const popupHtml = `${photoHtml}<div class="rental-popup-body"><div style="font-size:15px;font-weight:700;color:#1a1a1a;">$${rental.price.toLocaleString()}/mo</div><div style="font-size:12px;color:#6b6b6b;">${bedsNum} bed · ${typeCap}</div>${distText ? `<div style="font-size:12px;color:#6b6b6b;">${distText}</div>` : ''}<a id="${btnId}" href="#" style="font-size:12px;color:#2f6b4f;font-weight:600;text-decoration:none;margin-top:4px;display:inline-block;">View details &#8594;</a></div>`;
+      const popupHtml = `${photoHtml}<div class="rental-popup-body"><div style="font-size:15px;font-weight:700;color:#1a1a1a;">$${rental.price.toLocaleString()}/mo</div><div style="font-size:12px;color:#6b6b6b;">${bedsNum} bed · ${typeCap}</div>${distText ? `<div style="font-size:12px;color:#6b6b6b;">${distText}</div>` : ''}<a id="${btnId}" href="#" style="font-size:12px;color:#334462;font-weight:600;text-decoration:none;margin-top:4px;display:inline-block;">View details &#8594;</a></div>`;
 
       const popup = L.popup({
         maxWidth: 200,
@@ -927,6 +934,7 @@ export default function MapView({
 
       layer.addTo(map);
       rentalLayersRef.current.push(layer);
+      rentalLayersMapRef.current[rental.id] = layer;
     }
 
     async function showNearbyRentals(schoolName, centerLat, centerLng, token) {
@@ -1064,7 +1072,7 @@ export default function MapView({
       } catch (e) { /* ignore */ }
       showNearbyRentals(name, lat, lng, token);
     }
-  }, [selectedSchool, boundaryStatus]);
+  }, [selectedSchool, boundaryStatus, rentalSourceSchool]);
 
   // Deselect school when clicking outside the catchment area
   useEffect(() => {
@@ -1080,32 +1088,30 @@ export default function MapView({
     return () => map.off('click', handleMapClick);
   }, [selectedSchool]);
 
-  // Handle selected rental - highlight nearest school
+  // Handle selected rental - highlight the rental marker, keep catchment visible
   useEffect(() => {
     if (!mapInstanceRef.current) return;
     const map = mapInstanceRef.current;
+
+    // Reset all rental markers to default style
+    Object.values(rentalLayersMapRef.current).forEach(layer => {
+      layer.setStyle({ color: RENTAL_COLOR, weight: 2, fillColor: RENTAL_COLOR, fillOpacity: 0.55 });
+      if (typeof layer.setRadius === 'function') layer.setRadius(10);
+    });
+
     if (highlightLayerRef.current) { map.removeLayer(highlightLayerRef.current); highlightLayerRef.current = null; }
 
     if (!selectedRental) return;
     map.setView([selectedRental.lat, selectedRental.lng], Math.max(map.getZoom(), 14), { animate: true });
 
-    // Find nearest school and highlight it
-    let nearest = null;
-    let minDist = Infinity;
-    schools.forEach(s => {
-      const d = haversineDistance(selectedRental.lat, selectedRental.lng, s.lat, s.lng);
-      if (d < minDist) { minDist = d; nearest = s; }
-    });
-    if (nearest) {
-      const h = L.circleMarker([nearest.lat, nearest.lng], {
-        radius: 18,
-        color: '#fbbf24',
-        weight: 3,
-        fillOpacity: 0,
-      }).addTo(map);
-      highlightLayerRef.current = h;
+    // Highlight the selected rental marker
+    const layer = rentalLayersMapRef.current[selectedRental.id];
+    if (layer) {
+      layer.setStyle({ color: '#c2410c', weight: 3.5, fillColor: RENTAL_COLOR, fillOpacity: 0.92 });
+      if (typeof layer.setRadius === 'function') layer.setRadius(14);
+      layer.bringToFront();
     }
-  }, [selectedRental, schools]);
+  }, [selectedRental]);
 
   return (
     <>
