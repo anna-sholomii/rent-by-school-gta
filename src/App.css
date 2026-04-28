@@ -349,6 +349,19 @@
   margin: 0;
 }
 
+.topbar-rating-slider .dual-slider__fill {
+  background: linear-gradient(90deg, #273856, #334462);
+}
+
+.topbar-rating-slider .dual-slider__track {
+  background: rgba(51, 68, 98, 0.12);
+}
+
+.topbar-rating-slider .dual-slider__input::-webkit-slider-thumb {
+  background: #334462;
+  box-shadow: 0 0 0 3px rgba(51, 68, 98, 0.18);
+}
+
 .topbar-reset-btn {
   margin-left: auto;
   flex-shrink: 0;
