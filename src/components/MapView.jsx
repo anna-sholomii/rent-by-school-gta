@@ -625,6 +625,26 @@ export default function MapView({
     map.addLayer(clusterGroup);
     onVisibleCountChange && onVisibleCountChange(visibleSchoolCount, 0);
 
+    // Show/hide permanent tooltips based on zoom level + rating
+    const updateLabelVisibility = () => {
+      const zoom = map.getZoom();
+      const minRating =
+        zoom >= 15 ? -Infinity  // show all
+        : zoom >= 14 ? 5.0
+        : zoom >= 13 ? 7.5
+        : zoom >= 12 ? 9.0
+        : Infinity;             // hide all below zoom 12
+      schoolLayersRef.current.forEach(marker => {
+        const score = marker.options.fraserScore ?? -1;
+        const tooltip = marker.getTooltip();
+        if (!tooltip) return;
+        tooltip.setOpacity(score >= minRating ? 1 : 0);
+      });
+    };
+
+    updateLabelVisibility();
+    map.on('zoomend', updateLabelVisibility);
+
     // Attach keyboard handlers to any markers already in the DOM (non-clustered at current zoom).
     // Markers hidden inside clusters have no element yet; they pick up the handler when
     // they are individually rendered (via the tabindex="0" already in the divIcon HTML).
@@ -640,6 +660,10 @@ export default function MapView({
         });
       });
     });
+
+    return () => {
+      map.off('zoomend', updateLabelVisibility);
+    };
   }, [schools, ratingMin, ratingMax, boardFilter, languageFilter, gradeLevelFilter]);
 
   // Hide school cluster while in explore-rentals mode
