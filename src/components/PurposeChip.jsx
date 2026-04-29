@@ -93,7 +93,7 @@ export default function PurposeChip() {
           pointerEvents: 'none',
         }}
       >
-        <MapPin size={15} color="#4CAF50" strokeWidth={2.5} aria-hidden />
+        <MapPin size={15} color="#334462" strokeWidth={2.5} aria-hidden />
 
         {!isMobile && (
           <span style={{ fontSize: 13, fontWeight: 500, color: '#1a1a1a' }}>

@@ -149,7 +149,6 @@ export default function SchoolPanel({
                       <span className="panel__rental-price">${r.price.toLocaleString()}/mo</span>
                       <span className="panel__rental-beds">{r.bedrooms}bd · {r.bathrooms}ba</span>
                       <span className="panel__rental-type">{r.type}</span>
-                      <span className="panel__rental-type">Opens details in app</span>
                     </div>
                     {r.distance != null && (
                       <div className="panel__rental-distance">~{walkMinutes(r.distance)} min walk</div>
@@ -321,29 +320,43 @@ export default function SchoolPanel({
               <span className="panel__rental-range">{formatK(priceMin)}–{formatK(priceMax)}</span>
             </>
           ) : (
-            <span className="panel__rental-none">No rentals in budget range</span>
+            <span className="panel__rental-none">No rentals in current budget range</span>
           )}
           {mapLoading && hasRentals && (
             <span className="panel__locating">↗ Locating…</span>
           )}
         </div>
-        <div className="panel__neighbourhood-note" role="note" aria-label="Catchment verification notice">
-          <MapPin className="panel__neighbourhood-note-icon" size={14} color="var(--mute)" />
-          <span>
-            Listings are filtered to this school catchment. Always verify the exact address with TDSB or TCDSB before committing.
-          </span>
-        </div>
+
+        {/* Zero-rental guidance */}
+        {!hasRentals && (
+          <div className="panel__zero-rental-hint">
+            <p className="panel__zero-rental-text">Try widening your budget in the filters above, or explore a nearby school on the map.</p>
+            <button className="panel__try-nearby-btn" onClick={onClose}>← Back to map</button>
+          </div>
+        )}
+
+        {hasRentals && (
+          <div className="panel__neighbourhood-note" role="note" aria-label="Catchment verification notice">
+            <MapPin className="panel__neighbourhood-note-icon" size={14} color="var(--mute)" />
+            <span>
+              Listings are filtered to this school catchment. Always verify the exact address with TDSB or TCDSB before committing.
+            </span>
+          </div>
+        )}
 
       </div>
 
       <div className="panel__cta-sticky">
-        <button
-          className={`panel__explore-btn${!hasRentals ? ' panel__explore-btn--disabled' : ''}`}
-          onClick={() => hasRentals && onExploreRentals && onExploreRentals()}
-          disabled={!hasRentals}
-        >
-          {hasRentals ? 'Explore Rentals in Catchment →' : 'No rentals in catchment'}
-        </button>
+        <div className="panel__cta-row">
+          <button
+            className={`panel__explore-btn${!hasRentals ? ' panel__explore-btn--disabled' : ''}`}
+            onClick={() => hasRentals && onExploreRentals && onExploreRentals()}
+            disabled={!hasRentals}
+          >
+            {hasRentals ? 'Explore Rentals in Catchment →' : 'No rentals in catchment'}
+          </button>
+          <button className="panel__close-inline-btn" onClick={onClose} aria-label="Close school panel">✕</button>
+        </div>
       </div>
     </div>
   );

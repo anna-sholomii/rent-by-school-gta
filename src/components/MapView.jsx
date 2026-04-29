@@ -606,7 +606,7 @@ export default function MapView({
       const titleName = toTitleCase(school.name);
       const markerTitle = `${titleName}, Fraser score ${rating != null ? rating.toFixed(1) : 'N/A'} out of 10`;
       const marker = L.marker([lat, lng], { icon: makeSchoolIcon(schoolType, rating, hasRentals, isFrench, markerTitle), fraserScore: rating ?? 0, schoolName: school.name });
-      const shortName = titleName.length > 22 ? titleName.substring(0, 20) + '…' : titleName;
+      const shortName = titleName.length > 32 ? titleName.substring(0, 30) + '…' : titleName;
       marker.bindTooltip(shortName, {
         direction: 'top',
         offset: [0, -10],
@@ -680,7 +680,7 @@ export default function MapView({
         if (r === null || r === undefined) return { color: '#9ca3af', fillColor: 'rgba(128,128,128,0.08)' };
         if (r >= 7) return { color: '#4CAF50', fillColor: 'rgba(76,175,80,0.12)' };
         if (r >= 4) return { color: '#FFC107', fillColor: 'rgba(255,193,7,0.10)' };
-        return { color: '#E53935', fillColor: 'rgba(244,67,54,0.08)' };
+        return { color: '#f87171', fillColor: 'rgba(248,113,113,0.10)' };
       })();
       catchmentLayerRef.current.setStyle({
         color: colors.color,
@@ -986,7 +986,7 @@ export default function MapView({
       if (rating === null || rating === undefined) return { color: '#9ca3af', fillColor: 'rgba(128,128,128,0.08)' };
       if (rating >= 7) return { color: '#4CAF50', fillColor: 'rgba(76,175,80,0.12)' };
       if (rating >= 4) return { color: '#FFC107', fillColor: 'rgba(255,193,7,0.10)' };
-      return { color: '#E53935', fillColor: 'rgba(244,67,54,0.08)' };
+      return { color: '#f87171', fillColor: 'rgba(248,113,113,0.10)' };
     }
 
     function drawBoundaryPolygon(map, feature, boardHint) {

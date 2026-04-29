@@ -71,7 +71,6 @@ function RentalListView({ rentals, onRentalClick, sort, onSortChange }) {
                     <span className="panel__rental-price">${r.price.toLocaleString()}/mo</span>
                     <span className="panel__rental-beds">{r.bedrooms}bd · {r.bathrooms}ba</span>
                     <span className="panel__rental-type">{r.type}</span>
-                    <span className="panel__rental-type">Opens details in app</span>
                   </div>
                   {r.distance != null && (
                     <div className="panel__rental-distance">
@@ -126,6 +125,7 @@ export default function App() {
   const [listView, setListView] = useState(false);
   const [rentalSort, setRentalSort] = useState('price-asc');
   const [lastViewedRentalId, setLastViewedRentalId] = useState(null);
+  const [mobileSheetState, setMobileSheetState] = useState('peek'); // 'peek' | 'full'
   const [showSchoolList, setShowSchoolList] = useState(false);
   const [loadedSchools, setLoadedSchools] = useState([]);
   const [filtersHydrated, setFiltersHydrated] = useState(false);
@@ -218,6 +218,7 @@ export default function App() {
     setSelectedRental(null);
     setSelectedSchool(school);
     setRentalExploreMode(false);
+    setMobileSheetState('peek');
   }, []);
 
   const handleExploreRentals = useCallback(() => {
@@ -247,6 +248,7 @@ export default function App() {
     setSelectedSchool(null);
     setSelectedRental(rental);
     setLastViewedRentalId(rental.id);
+    setMobileSheetState('peek');
   }, [selectedSchool]);
 
   // Navigate back to the school we came from
@@ -469,7 +471,16 @@ export default function App() {
       <div className="app__body">
         {/* Left sidebar: only visible when a school or rental is selected */}
         {(selectedSchool || selectedRental) && (
-          <div className="app__sidebar">
+          <div className={`app__sidebar app__sidebar--${mobileSheetState}`}>
+            {/* Mobile drag handle — tapping cycles peek ↔ full */}
+            <div
+              className="sheet-drag-handle"
+              role="button"
+              aria-label={mobileSheetState === 'peek' ? 'Expand panel' : 'Collapse panel'}
+              tabIndex={0}
+              onClick={() => setMobileSheetState(s => s === 'peek' ? 'full' : 'peek')}
+              onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setMobileSheetState(s => s === 'peek' ? 'full' : 'peek')}
+            />
             <div className="app__sidebar-content">
               {selectedSchool && rentalExploreMode && listView ? (
                 <RentalListView
@@ -482,7 +493,7 @@ export default function App() {
                 <SchoolPanel
                   school={selectedSchool}
                   nearbyRentals={nearbyRentals}
-                  onClose={() => { setSelectedSchool(null); setRentalExploreMode(false); }}
+                  onClose={() => { setSelectedSchool(null); setRentalExploreMode(false); setMobileSheetState('peek'); }}
                   onRentalClick={handleRentalClick}
                   rentalMode={rentalExploreMode}
                   onExploreRentals={handleExploreRentals}
@@ -496,7 +507,7 @@ export default function App() {
                   rental={selectedRental}
                   assignedSchool={assignedSchool}
                   previousSchool={previousSchool}
-                  onClose={() => { setSelectedRental(null); setPreviousSchool(null); }}
+                  onClose={() => { setSelectedRental(null); setPreviousSchool(null); setMobileSheetState('peek'); }}
                   onSchoolClick={handleSchoolClick}
                   onBackToSchool={handleBackToSchool}
                 />
@@ -755,6 +766,13 @@ export default function App() {
             </div>
           </div>
         )}
+        {/* Approximate boundary badge — visible when a school is selected */}
+        {selectedSchool && !rentalExploreMode && (
+          <div className="catchment-approx-badge" role="note" aria-label="Catchment boundary is approximate">
+            ⚠ Approximate boundary — verify at TDSB/TCDSB
+          </div>
+        )}
+
         {/* View toggle — only visible in rental explore mode */}
         {rentalExploreMode && (
           <div className="view-toggle">

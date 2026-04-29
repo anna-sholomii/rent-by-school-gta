@@ -132,7 +132,7 @@
   border-radius: 8px;
   border: 1px solid #2a2b3d;
   background: #13141f;
-  color: #9ca3af;
+  color: #64748b;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -324,11 +324,11 @@
 }
 
 .topbar-filter-label {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: #64748b;
 }
 
 .topbar-rating-head {
@@ -444,6 +444,25 @@
 
 .map-results-badge__label {
   font-weight: 600;
+}
+
+/* Catchment approximation warning badge */
+.catchment-approx-badge {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 410;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 247, 237, 0.96);
+  border: 1px solid #fed7aa;
+  color: #92400e;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
 }
 
 /* ==============================
@@ -907,7 +926,7 @@
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: #94a3b8;
+  color: #64748b;
   margin-top: 2px;
   margin-bottom: 6px;
 }
@@ -1035,7 +1054,7 @@
   display: flex;
   justify-content: space-between;
   font-size: 11px;
-  color: #94a3b8;
+  color: #64748b;
   margin-top: 4px;
 }
 
@@ -1323,7 +1342,7 @@
 }
 
 .panel__rating-badge--unrated {
-  background: #9ca3af;
+  background: #64748b;
 }
 
 .panel__rating-num {
@@ -1353,7 +1372,7 @@
 
 .panel__price-period {
   font-size: 13px;
-  color: #94a3b8;
+  color: #64748b;
   font-weight: 500;
 }
 
@@ -1373,7 +1392,7 @@
 .panel__detail-label {
   font-size: 11px;
   font-weight: 700;
-  color: #94a3b8;
+  color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   min-width: 60px;
@@ -1442,7 +1461,7 @@
 /* Empty rentals state */
 .panel__empty-rentals {
   font-size: 13px;
-  color: #94a3b8;
+  color: #64748b;
 }
 
 .panel__empty-rentals p {
@@ -1470,7 +1489,7 @@
 
 .panel__empty {
   font-size: 13px;
-  color: #94a3b8;
+  color: #64748b;
   font-style: italic;
 }
 
@@ -1535,7 +1554,7 @@
   color: var(--accent);
 }
 .panel__rental-none {
-  color: #94a3b8;
+  color: #64748b;
   font-style: italic;
 }
 .panel__locating {
@@ -1566,7 +1585,7 @@
 }
 .panel__explore-btn--disabled {
   background: #e2e8f0;
-  color: #94a3b8;
+  color: #64748b;
   cursor: default;
 }
 .panel__explore-btn--disabled:hover { opacity: 1; }
@@ -1674,7 +1693,7 @@
 
 .panel__rental-neighbourhood {
   font-size: 11px;
-  color: #94a3b8;
+  color: #64748b;
   margin-bottom: 6px;
 }
 
@@ -1702,7 +1721,7 @@
 
 .panel__rental-distance {
   font-size: 11px;
-  color: #94a3b8;
+  color: #64748b;
   margin-top: 4px;
 }
 
@@ -1770,7 +1789,7 @@
 
 .panel__school-item-dist {
   font-size: 11px;
-  color: #94a3b8;
+  color: #64748b;
   margin-left: auto;
 }
 
@@ -1857,7 +1876,7 @@
   gap: 12px;
   padding: 48px 24px;
   text-align: center;
-  color: #9ca3af;
+  color: #64748b;
 }
 .sidebar__empty-icon {
   font-size: 36px;
@@ -1874,7 +1893,7 @@
    ============================== */
 .map-legend__note {
   font-size: 10px;
-  color: #94a3b8;
+  color: #64748b;
   margin-top: 8px;
   line-height: 1.4;
   border-top: 1px solid #e2e8f0;
@@ -2154,6 +2173,55 @@
   padding: 12px 16px;
   border-top: 0.5px solid var(--line);
 }
+
+/* CTA row: explore button + inline close */
+.panel__cta-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.panel__cta-row .panel__explore-btn {
+  flex: 1;
+}
+
+.panel__close-inline-btn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink-2);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.panel__close-inline-btn:hover {
+  background: var(--line);
+  border-color: var(--ink-2);
+}
+
+/* Zero-rental guidance */
+.panel__zero-rental-hint {
+  margin: 0 16px 16px;
+  padding: 12px 14px;
+  background: var(--bg);
+  border-radius: 10px;
+  border: 1px solid var(--line);
+}
+
+.panel__zero-rental-text {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--mute);
+  line-height: 1.5;
+}
+
 .panel__fraser-toggle { display: none; }
 
 /* French school badge */
@@ -2333,7 +2401,7 @@
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: #94a3b8;
+  color: #64748b;
   text-transform: uppercase;
 }
 
@@ -2788,12 +2856,12 @@
   margin-left: 8px;
 }
 .shepherd-element.rbs-step .shepherd-cancel-icon:hover {
-  color: #9ca3af;
+  color: #64748b;
 }
 
 /* Body text */
 .shepherd-element.rbs-step .shepherd-text {
-  color: #9ca3af;
+  color: #64748b;
   font-size: 13px;
   line-height: 1.6;
   padding: 8px 16px 14px;
@@ -2836,7 +2904,7 @@
   transition: color 0.15s, border-color 0.15s;
 }
 .shepherd-element.rbs-step .shepherd-button.rbs-btn-secondary:hover {
-  color: #9ca3af;
+  color: #64748b;
   border-color: #3d3f58;
 }
 
