@@ -449,6 +449,7 @@ export default function App() {
           onExploreMapHint={() =>
             showToast('Pan and zoom the map, then tap a school pin — or keep searching by name above.')
           }
+          onMobileFilterOpen={() => setMobileFiltersOpen(true)}
           rentalExploreMode={rentalExploreMode}
           budgetMin={budgetMin}
           budgetMax={budgetMax}
@@ -472,15 +473,6 @@ export default function App() {
         {/* Left sidebar: only visible when a school or rental is selected */}
         {(selectedSchool || selectedRental) && (
           <div className={`app__sidebar app__sidebar--${mobileSheetState}`}>
-            {/* Mobile drag handle — tapping cycles peek ↔ full */}
-            <div
-              className="sheet-drag-handle"
-              role="button"
-              aria-label={mobileSheetState === 'peek' ? 'Expand panel' : 'Collapse panel'}
-              tabIndex={0}
-              onClick={() => setMobileSheetState(s => s === 'peek' ? 'full' : 'peek')}
-              onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setMobileSheetState(s => s === 'peek' ? 'full' : 'peek')}
-            />
             <div className="app__sidebar-content">
               {selectedSchool && rentalExploreMode && listView ? (
                 <RentalListView
@@ -537,25 +529,6 @@ export default function App() {
                 </span>
               </>
             )}
-          </div>
-        )}
-
-        {/* Mobile filter bar — only visible on ≤768px */}
-        {!showSchoolList && (
-          <div className="mobile-top-filters">
-            <button
-              className={`mtf-pill mtf-pill--dark${mobileFiltersOpen ? ' mtf-pill--open' : ''}${activeFilterCount > 0 ? ' mtf-pill--has-badge' : ''}`}
-              onClick={() => setMobileFiltersOpen(o => !o)}
-              aria-expanded={mobileFiltersOpen}
-              aria-controls="mobile-filters-panel"
-              type="button"
-            >
-              <span className="mtf-pill__text">{refinePillLabel}</span>
-              {activeFilterCount > 0 && (
-                <span className="mtf-pill__badge" aria-hidden="true">{activeFilterCount}</span>
-              )}
-              <span className="mtf-pill__caret" aria-hidden="true">{mobileFiltersOpen ? '▴' : '▾'}</span>
-            </button>
           </div>
         )}
 

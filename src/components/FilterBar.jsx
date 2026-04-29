@@ -75,6 +75,7 @@ export default function FilterBar({
   matchingSchoolCount = 0,
   onExploreMapHint,
   onApplyFilters,
+  onMobileFilterOpen,
   rentalExploreMode = false,
   budgetMin = BUDGET_MIN,
   budgetMax = BUDGET_MAX,
@@ -275,7 +276,23 @@ export default function FilterBar({
           )}
         </div>
 
-        {/* School filters — always visible in top bar */}
+        {/* Mobile-only filter button — replaces the scrolling filter groups */}
+        <button
+          type="button"
+          className="topbar-mobile-filter-btn"
+          onClick={onMobileFilterOpen}
+          aria-label={activeFilterCount > 0 ? `Filters · ${activeFilterCount} active` : 'Open filters'}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+          </svg>
+          <span className="topbar-mobile-filter-label">Filters</span>
+          {activeFilterCount > 0 && (
+            <span className="topbar-mobile-filter-badge">{activeFilterCount}</span>
+          )}
+        </button>
+
+        {/* School filters — always visible in top bar on desktop */}
         <div className="topbar-divider" aria-hidden="true" />
 
         <div className="topbar-filter-group">

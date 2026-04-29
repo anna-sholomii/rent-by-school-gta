@@ -446,6 +446,49 @@
   font-weight: 600;
 }
 
+/* ── Topbar mobile filter button (hidden on desktop) ── */
+.topbar-mobile-filter-btn {
+  display: none; /* shown via @media override on mobile */
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  flex-shrink: 0;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.topbar-mobile-filter-btn:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.topbar-mobile-filter-label {
+  font-size: 13px;
+}
+
+.topbar-mobile-filter-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
 /* Catchment approximation warning badge */
 .catchment-approx-badge {
   position: absolute;
@@ -2653,16 +2696,37 @@
     overflow: visible;
   }
 
-  /* Real drag handle div (replaces ::before) */
-  .sheet-drag-handle {
+  /* Drag handle overlaid on the panel photo — no gap above photo */
+  .sheet-drag-handle--overlay {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
     width: 36px;
     height: 4px;
-    background: rgba(0, 0, 0, 0.18);
+    background: rgba(255, 255, 255, 0.6);
     border-radius: 2px;
-    margin: 12px auto 4px;
-    flex-shrink: 0;
-    cursor: grab;
-    touch-action: none;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  /* Hide the old standalone drag handle on mobile (we use overlay now) */
+  .sheet-drag-handle:not(.sheet-drag-handle--overlay) {
+    display: none;
+  }
+
+  /* No top border-radius gap — photo fills the top of the sheet */
+  .app__sidebar--peek,
+  .app__sidebar--full,
+  .app__sidebar--expanded {
+    border-radius: 20px 20px 0 0;
+    overflow: hidden;
+  }
+
+  .school-panel__hero,
+  .panel__photo-wrap {
+    border-radius: 20px 20px 0 0;
+    overflow: hidden;
   }
 
   /* CTA pinned to bottom of sheet in PEEK state */
@@ -2676,11 +2740,33 @@
 
   /* Photo height on mobile */
   .panel__photo {
-    height: 110px !important;
+    height: 130px !important;
   }
 
   .school-panel__hero-img {
-    height: 110px !important;
+    height: 130px !important;
+  }
+
+  /* Hide the Fraser rating legend on mobile — it overlaps the map */
+  .map-legend {
+    display: none !important;
+  }
+
+  /* Hide the map-side Refine filters pill (filters now live in topbar) */
+  .mobile-top-filters {
+    display: none !important;
+  }
+
+  /* Hide scrolling filter groups in topbar — show only mobile filter button */
+  .topbar-divider,
+  .topbar-filter-group,
+  .topbar-reset-btn {
+    display: none !important;
+  }
+
+  /* Show the mobile filter button */
+  .topbar-mobile-filter-btn {
+    display: flex !important;
   }
 
   /* Hide logo, search, filters and empty state */

@@ -8,6 +8,8 @@ export default function RentalPanel({ rental, assignedSchool, previousSchool, on
     <div className="panel rental-panel">
       {/* Rental photo with overlaid nav buttons */}
       <div className="panel__photo-wrap">
+        {/* Mobile drag handle overlaid on photo */}
+        <div className="sheet-drag-handle sheet-drag-handle--overlay" aria-hidden="true" />
         {rental.photo
           ? <img src={rental.photo} alt={rental.address} className="panel__photo panel__photo--rental"
               style={{ width: '100%', height: '200px', objectFit: 'cover', display: 'block' }} />

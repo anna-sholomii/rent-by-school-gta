@@ -174,6 +174,8 @@ export default function SchoolPanel({
   return (
     <div className="panel school-panel">
       <div className="school-panel__hero">
+        {/* Mobile drag handle overlaid on photo */}
+        <div className="sheet-drag-handle sheet-drag-handle--overlay" aria-hidden="true" />
         <img
           src={getSchoolPhoto(props.NAME || name)}
           alt={displayName}
@@ -347,16 +349,13 @@ export default function SchoolPanel({
       </div>
 
       <div className="panel__cta-sticky">
-        <div className="panel__cta-row">
-          <button
-            className={`panel__explore-btn${!hasRentals ? ' panel__explore-btn--disabled' : ''}`}
-            onClick={() => hasRentals && onExploreRentals && onExploreRentals()}
-            disabled={!hasRentals}
-          >
-            {hasRentals ? 'Explore Rentals in Catchment →' : 'No rentals in catchment'}
-          </button>
-          <button className="panel__close-inline-btn" onClick={onClose} aria-label="Close school panel">✕</button>
-        </div>
+        <button
+          className={`panel__explore-btn${!hasRentals ? ' panel__explore-btn--disabled' : ''}`}
+          onClick={() => hasRentals && onExploreRentals && onExploreRentals()}
+          disabled={!hasRentals}
+        >
+          {hasRentals ? 'Explore Rentals in Catchment →' : 'No rentals in catchment'}
+        </button>
       </div>
     </div>
   );
