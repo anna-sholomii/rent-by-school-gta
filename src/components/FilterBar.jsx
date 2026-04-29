@@ -96,7 +96,9 @@ export default function FilterBar({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const searchRef = useRef(null);
+  const mobileSearchInputRef = useRef(null);
   const suggestionsRef = useRef(null);
   const listboxId = 'school-search-suggestions';
 
@@ -116,6 +118,18 @@ export default function FilterBar({
   useEffect(() => {
     if (rentalExploreMode) setFiltersOpen(true);
   }, [rentalExploreMode]);
+
+  // Auto-focus mobile search input when opened
+  useEffect(() => {
+    if (mobileSearchOpen) {
+      requestAnimationFrame(() => mobileSearchInputRef.current?.focus());
+    }
+  }, [mobileSearchOpen]);
+
+  // Close mobile search when a school is selected
+  useEffect(() => {
+    if (selectedSchoolId != null) setMobileSearchOpen(false);
+  }, [selectedSchoolId]);
 
   useEffect(() => {
     function handleClick(e) {
@@ -216,15 +230,74 @@ export default function FilterBar({
 
   if (topBarMode) {
     return (
-      <div className="topbar-filters" ref={searchRef}>
-        {/* Brand */}
+      <div className={`topbar-filters${mobileSearchOpen ? ' topbar-filters--search-open' : ''}`} ref={searchRef}>
+
+        {/* ── Mobile search overlay (full-width input, replaces whole bar) ── */}
+        {mobileSearchOpen && (
+          <div className="topbar-mobile-search-overlay">
+            <div className="topbar-search-field topbar-mobile-search-field">
+              <input
+                ref={mobileSearchInputRef}
+                type="text"
+                className="topbar-search topbar-mobile-search-input"
+                placeholder="Search school…"
+                value={schoolSearch}
+                onChange={e => { onSchoolSearchChange(e.target.value); setShowSuggestions(true); }}
+                onFocus={() => setShowSuggestions(true)}
+                onKeyDown={handleSearchKeyDown}
+                role="combobox"
+                aria-autocomplete="list"
+                aria-expanded={showSuggestions && (suggestions.length > 0 || showNoResults)}
+                aria-controls={showNoResults ? 'topbar-search-empty-msg' : listboxId}
+                aria-label="Search schools"
+              />
+              {queryTrim.length > 0 && (
+                <button type="button" className="topbar-search-clear" onClick={handleClearSearch} aria-label="Clear school search">×</button>
+              )}
+            </div>
+            <button
+              type="button"
+              className="topbar-mobile-search-cancel"
+              onClick={() => { setMobileSearchOpen(false); onSchoolSearchChange(''); setShowSuggestions(false); }}
+              aria-label="Cancel search"
+            >
+              Cancel
+            </button>
+            {showSuggestions && suggestions.length > 0 && (
+              <ul className="topbar-suggestions topbar-suggestions--mobile" id={listboxId} role="listbox" ref={suggestionsRef}>
+                {suggestions.map((s, idx) => (
+                  <li
+                    key={s.id}
+                    id={`school-option-${s.id}`}
+                    className="sidebar-suggestion"
+                    role="option"
+                    aria-selected={idx === activeSuggestionIndex}
+                    onMouseDown={() => { handleSelect(s); setMobileSearchOpen(false); }}
+                  >
+                    <span className="sidebar-suggestion__name">{toTitleCase(s.name)}</span>
+                    {s.rating != null && (
+                      <span className="sidebar-suggestion__meta">{s.rating.toFixed(1)} Fraser · {s.properties?.SCHOOL_TYPE_DESC}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {showSuggestions && showNoResults && (
+              <div className="topbar-search-empty topbar-search-empty--mobile" id="topbar-search-empty-msg" role="status">
+                No schools match &ldquo;{debouncedQuery.trim()}&rdquo;
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Normal bar (hidden on mobile when search is open) ── */}
         <div className="topbar-brand">
           <img src="/logo.svg" className="topbar-brand__logo" alt="" aria-hidden="true" width="28" height="32" />
           <span className="topbar-brand__title">Rent by School</span>
         </div>
 
-        {/* School search */}
-        <div className="topbar-search-wrap">
+        {/* Desktop search */}
+        <div className="topbar-search-wrap topbar-search-wrap--desktop">
           <div className="topbar-search-field">
             <input
               id="topbar-school-search"
@@ -276,21 +349,34 @@ export default function FilterBar({
           )}
         </div>
 
-        {/* Mobile-only filter button — replaces the scrolling filter groups */}
-        <button
-          type="button"
-          className="topbar-mobile-filter-btn"
-          onClick={onMobileFilterOpen}
-          aria-label={activeFilterCount > 0 ? `Filters · ${activeFilterCount} active` : 'Open filters'}
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-          </svg>
-          <span className="topbar-mobile-filter-label">Filters</span>
-          {activeFilterCount > 0 && (
-            <span className="topbar-mobile-filter-badge">{activeFilterCount}</span>
-          )}
-        </button>
+        {/* Mobile-only: search icon + filter button */}
+        <div className="topbar-mobile-actions">
+          <button
+            type="button"
+            className="topbar-mobile-search-btn"
+            onClick={() => setMobileSearchOpen(true)}
+            aria-label="Search schools"
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.7"/>
+              <path d="M12.5 12.5L16 16" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/>
+            </svg>
+          </button>
+          <button
+            type="button"
+            className="topbar-mobile-filter-btn"
+            onClick={onMobileFilterOpen}
+            aria-label={activeFilterCount > 0 ? `Filters · ${activeFilterCount} active` : 'Open filters'}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+            </svg>
+            <span className="topbar-mobile-filter-label">Filters</span>
+            {activeFilterCount > 0 && (
+              <span className="topbar-mobile-filter-badge">{activeFilterCount}</span>
+            )}
+          </button>
+        </div>
 
         {/* School filters — always visible in top bar on desktop */}
         <div className="topbar-divider" aria-hidden="true" />

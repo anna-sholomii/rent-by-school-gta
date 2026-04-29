@@ -446,6 +446,97 @@
   font-weight: 600;
 }
 
+/* ── Topbar mobile actions row (search icon + filter btn) — hidden on desktop ── */
+.topbar-mobile-actions {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* ── Mobile search icon button ── */
+.topbar-mobile-search-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.topbar-mobile-search-btn:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+/* ── Mobile search overlay (full-width, covers the topbar) ── */
+.topbar-mobile-search-overlay {
+  display: none; /* shown on mobile only */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  z-index: 200;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+}
+
+.topbar-mobile-search-field {
+  flex: 1;
+  position: relative;
+}
+
+.topbar-mobile-search-input {
+  width: 100% !important;
+}
+
+.topbar-mobile-search-cancel {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 4px 0;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.topbar-suggestions--mobile {
+  position: fixed !important;
+  top: 56px !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  border-radius: 0 0 12px 12px !important;
+  border-left: none !important;
+  border-right: none !important;
+  max-height: 50vh;
+  overflow-y: auto;
+  z-index: 9999 !important;
+}
+
+.topbar-search-empty--mobile {
+  position: fixed !important;
+  top: 56px !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  border-radius: 0 0 12px 12px !important;
+}
+
 /* ── Topbar mobile filter button (hidden on desktop) ── */
 .topbar-mobile-filter-btn {
   display: none; /* shown via @media override on mobile */
@@ -2757,16 +2848,33 @@
     display: none !important;
   }
 
-  /* Hide scrolling filter groups in topbar — show only mobile filter button */
+  /* Hide desktop search + filter groups in topbar on mobile */
+  .topbar-search-wrap--desktop,
   .topbar-divider,
   .topbar-filter-group,
   .topbar-reset-btn {
     display: none !important;
   }
 
-  /* Show the mobile filter button */
+  /* Show mobile action row (search icon + filter btn) */
+  .topbar-mobile-actions {
+    display: flex !important;
+  }
+
+  /* Show mobile filter button inside the actions row */
   .topbar-mobile-filter-btn {
     display: flex !important;
+  }
+
+  /* Show mobile search overlay when active */
+  .topbar-filters--search-open .topbar-mobile-search-overlay {
+    display: flex !important;
+  }
+
+  /* Hide the rest of the bar when search overlay is open */
+  .topbar-filters--search-open .topbar-brand,
+  .topbar-filters--search-open .topbar-mobile-actions {
+    display: none !important;
   }
 
   /* Hide logo, search, filters and empty state */
