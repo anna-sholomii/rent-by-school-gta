@@ -121,15 +121,14 @@ export default function SchoolPanel({
           <span className="panel__rental-result-num">{nearbyRentals.length}</span>
           <span className="panel__rental-result-label">rental{nearbyRentals.length !== 1 ? 's' : ''} in catchment</span>
         </div>
-        <div className="panel__neighbourhood-note" role="note" aria-label="Catchment verification notice">
+        <div className="panel__rental-mode-notice" role="note" aria-label="Catchment verification notice">
           <MapPin className="panel__neighbourhood-note-icon" size={14} color="var(--mute)" />
           <span>
-            Rentals shown here are inside this catchment boundary, not just nearby.
             Verify your exact address on the school board site before signing a lease.
           </span>
         </div>
         {hasRentals ? (
-          <ul className="panel__rental-list">
+          <ul className="panel__rental-list panel__rental-list--mode">
             {nearbyRentals.map(r => (
               <li key={r.id} className={`panel__rental-item${r.id === lastViewedRentalId ? ' panel__rental-item--selected' : ''}`}>
                 <button
@@ -337,14 +336,6 @@ export default function SchoolPanel({
           </div>
         )}
 
-        {hasRentals && (
-          <div className="panel__neighbourhood-note" role="note" aria-label="Catchment verification notice">
-            <MapPin className="panel__neighbourhood-note-icon" size={14} color="var(--mute)" />
-            <span>
-              Listings are filtered to this school catchment. Always verify the exact address with TDSB or TCDSB before committing.
-            </span>
-          </div>
-        )}
 
       </div>
 

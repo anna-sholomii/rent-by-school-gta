@@ -140,6 +140,7 @@ export default function App() {
   const urlInitDoneRef = useRef(false);
   const toastTimerRef = useRef(null);
   const mobileSuggestionsRef = useRef(null);
+  const sheetTouchStartYRef = useRef(null);
 
   const [toastMessage, setToastMessage] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
@@ -248,7 +249,7 @@ export default function App() {
     setSelectedSchool(null);
     setSelectedRental(rental);
     setLastViewedRentalId(rental.id);
-    setMobileSheetState('peek');
+    setMobileSheetState('full');
   }, [selectedSchool]);
 
   // Navigate back to the school we came from
@@ -259,6 +260,26 @@ export default function App() {
       setPreviousSchool(null);
     }
   }, [previousSchool]);
+
+  const handleSheetTouchStart = useCallback((e) => {
+    sheetTouchStartYRef.current = e.touches[0].clientY;
+  }, []);
+
+  const handleSheetTouchMove = useCallback((e) => {
+    if (sheetTouchStartYRef.current === null) return;
+    const delta = sheetTouchStartYRef.current - e.touches[0].clientY;
+    if (delta > 40 && mobileSheetState === 'peek') {
+      setMobileSheetState('full');
+      sheetTouchStartYRef.current = null;
+    } else if (delta < -40 && mobileSheetState === 'full' && e.currentTarget.scrollTop === 0) {
+      setMobileSheetState('peek');
+      sheetTouchStartYRef.current = null;
+    }
+  }, [mobileSheetState]);
+
+  const handleSheetTouchEnd = useCallback(() => {
+    sheetTouchStartYRef.current = null;
+  }, []);
 
   // Get rentals within the selected school's catchment polygon
   const nearbyRentals = selectedSchool
@@ -472,7 +493,19 @@ export default function App() {
       <div className="app__body">
         {/* Left sidebar: only visible when a school or rental is selected */}
         {(selectedSchool || selectedRental) && (
-          <div className={`app__sidebar app__sidebar--${mobileSheetState}`}>
+          <div
+            className={`app__sidebar app__sidebar--${mobileSheetState}`}
+            onTouchStart={handleSheetTouchStart}
+            onTouchMove={handleSheetTouchMove}
+            onTouchEnd={handleSheetTouchEnd}
+          >
+            {mobileSheetState === 'peek' && (
+              <button
+                className="sheet-expand-tap"
+                onClick={() => setMobileSheetState('full')}
+                aria-label="Expand school details"
+              />
+            )}
             <div className="app__sidebar-content">
               {selectedSchool && rentalExploreMode && listView ? (
                 <RentalListView
@@ -499,7 +532,7 @@ export default function App() {
                   rental={selectedRental}
                   assignedSchool={assignedSchool}
                   previousSchool={previousSchool}
-                  onClose={() => { setSelectedRental(null); setPreviousSchool(null); setMobileSheetState('peek'); }}
+                  onClose={() => { setSelectedRental(null); setPreviousSchool(null); setRentalExploreMode(false); setMobileSheetState('peek'); }}
                   onSchoolClick={handleSchoolClick}
                   onBackToSchool={handleBackToSchool}
                 />
@@ -747,7 +780,7 @@ export default function App() {
         )}
 
         {/* View toggle — only visible in rental explore mode */}
-        {rentalExploreMode && (
+        {rentalExploreMode && !selectedRental && (
           <div className="view-toggle">
             <button
               className={`view-toggle__btn${!listView ? ' view-toggle__btn--active' : ''}`}

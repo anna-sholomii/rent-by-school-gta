@@ -1374,26 +1374,26 @@
 
 .panel__back-btn--on-photo {
   position: absolute;
-  bottom: 10px;
-  left: 10px;
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(6px);
+  bottom: 12px;
+  left: 12px;
+  background: #334462;
+  backdrop-filter: none;
   border: none;
-  border-bottom: none;
   border-radius: 8px;
-  padding: 5px 12px;
-  font-size: 12px;
+  padding: 8px 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--ink);
+  color: #fff;
   cursor: pointer;
-  z-index: 3;
+  z-index: 6;
   width: auto;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   transition: background 0.15s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
 }
 
 .panel__back-btn--on-photo:hover {
-  background: rgba(255, 255, 255, 0.97);
+  background: #273856;
 }
 
 .panel__photo--placeholder {
@@ -1750,7 +1750,51 @@
   border: 1px solid rgba(47, 107, 79, 0.18);
   border-radius: 10px;
   padding: 10px 16px;
-  margin: 8px 16px 4px;
+  margin: 8px 16px 16px;
+}
+
+/* Notice text between badge and rental cards */
+.panel__rental-mode-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 0 16px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: var(--mute);
+  line-height: 1.5;
+}
+
+.panel__rental-mode-notice .panel__neighbourhood-note-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Rental cards in explore mode — no border */
+.panel__rental-list--mode .panel__rental-item {
+  border: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+}
+
+/* Back-to-school row below rental photo */
+.panel__back-to-school-btn {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border: none;
+  border-bottom: 1px solid #e2e8f0;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.panel__back-to-school-btn:hover {
+  background: #eef2f8;
 }
 .panel__rental-result-num {
   font-size: 28px;
@@ -1786,6 +1830,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  padding: 0 16px;
 }
 
 .panel__rental-item {
@@ -1793,7 +1838,8 @@
   border-radius: 10px;
   overflow: hidden;
   cursor: pointer;
-  border: 1.5px solid #e2e8f0;
+  border: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
   transition: all 0.15s;
 }
 
@@ -2799,6 +2845,7 @@
     border-radius: 2px;
     z-index: 10;
     pointer-events: none;
+    touch-action: none;
   }
 
   /* Hide the old standalone drag handle on mobile (we use overlay now) */
@@ -2811,6 +2858,10 @@
   .app__sidebar--full,
   .app__sidebar--expanded {
     border-radius: 20px 20px 0 0;
+  }
+
+  /* Peek clips content to its height; full/expanded must scroll */
+  .app__sidebar--peek {
     overflow: hidden;
   }
 
@@ -2827,6 +2878,23 @@
     left: 0;
     right: 0;
     z-index: 5;
+  }
+
+  /* Transparent tap target — covers whole peek sheet, expands on tap */
+  .sheet-expand-tap {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  /* Close button must sit above the expand overlay */
+  .panel__close,
+  .panel__close--on-photo {
+    z-index: 6 !important;
   }
 
   /* Photo height on mobile */

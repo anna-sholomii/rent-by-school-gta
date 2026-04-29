@@ -69,66 +69,98 @@ export default function PurposeChip() {
   return (
     <>
       {/* ── Floating purpose chip ── */}
-      <div
-        role="region"
-        aria-label="App purpose"
-        className="purpose-chip"
-        style={{
-          position: 'absolute',
-          top: 12,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 1000,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          background: 'rgba(255,255,255,0.75)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
-          border: '1px solid rgba(0,0,0,0.08)',
-          borderRadius: 999,
-          padding: '8px 8px 8px 14px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
-          whiteSpace: 'nowrap',
-          pointerEvents: 'none',
-        }}
-      >
-        <MapPin size={15} color="#334462" strokeWidth={2.5} aria-hidden />
-
-        {!isMobile && (
-          <span style={{ fontSize: 13, fontWeight: 500, color: '#1a1a1a' }}>
-            Find rentals inside a school's catchment
-          </span>
-        )}
-
+      {isMobile ? (
+        /* Mobile: compact pill button at bottom of map, fades out when panel opens */
         <button
           className="purpose-chip__toggle"
           aria-expanded={open}
           aria-controls="how-it-works-panel"
           onClick={() => setOpen((o) => !o)}
           style={{
-            background: 'rgba(0,0,0,0.06)',
-            border: 'none',
+            position: 'absolute',
+            bottom: 20,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1000,
+            background: 'rgba(255,255,255,0.82)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            border: '1px solid rgba(0,0,0,0.10)',
             borderRadius: 999,
-            padding: '4px 10px',
+            padding: '7px 16px',
             fontSize: 13,
-            fontWeight: 400,
-            color: '#1a1a1a',
+            fontWeight: 500,
+            color: '#334462',
             cursor: 'pointer',
-            minHeight: 44,
+            whiteSpace: 'nowrap',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
+            fontFamily: 'inherit',
+            opacity: open ? 0 : 1,
+            pointerEvents: open ? 'none' : 'auto',
+            transition: 'opacity 0.18s',
+          }}
+        >
+          How it works
+        </button>
+      ) : (
+        /* Desktop: chip with label + button */
+        <div
+          role="region"
+          aria-label="App purpose"
+          className="purpose-chip"
+          style={{
+            position: 'absolute',
+            top: 12,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1000,
             display: 'flex',
             alignItems: 'center',
-            gap: 4,
-            fontFamily: 'inherit',
-            transition: 'background 0.15s',
-            pointerEvents: 'auto',
+            gap: 8,
+            background: 'rgba(255,255,255,0.75)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            border: '1px solid rgba(0,0,0,0.08)',
+            borderRadius: 999,
+            padding: '8px 8px 8px 14px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
+            whiteSpace: 'nowrap',
+            pointerEvents: 'none',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(0,0,0,0.10)')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(0,0,0,0.06)')}
         >
-          How it works <span aria-hidden="true">↗</span>
-        </button>
-      </div>
+          <MapPin size={15} color="#334462" strokeWidth={2.5} aria-hidden />
+          <span style={{ fontSize: 13, fontWeight: 500, color: '#1a1a1a' }}>
+            Find rentals inside a school's catchment
+          </span>
+          <button
+            className="purpose-chip__toggle"
+            aria-expanded={open}
+            aria-controls="how-it-works-panel"
+            onClick={() => setOpen((o) => !o)}
+            style={{
+              background: 'rgba(0,0,0,0.06)',
+              border: 'none',
+              borderRadius: 999,
+              padding: '4px 10px',
+              fontSize: 13,
+              fontWeight: 400,
+              color: '#1a1a1a',
+              cursor: 'pointer',
+              minHeight: 44,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              fontFamily: 'inherit',
+              transition: 'background 0.15s',
+              pointerEvents: 'auto',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(0,0,0,0.10)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(0,0,0,0.06)')}
+          >
+            How it works <span aria-hidden="true">↗</span>
+          </button>
+        </div>
+      )}
 
       {/* ── Panel ── */}
       {open && (

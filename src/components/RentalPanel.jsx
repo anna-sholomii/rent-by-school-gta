@@ -16,12 +16,13 @@ export default function RentalPanel({ rental, assignedSchool, previousSchool, on
           : <div className="panel__photo panel__photo--rental panel__photo--placeholder"><span className="panel__photo-icon" aria-hidden="true">🏠</span></div>
         }
         <button className="panel__close panel__close--on-photo" onClick={onClose} aria-label="Close rental panel">✕</button>
-        {previousSchool && (
-          <button className="panel__back-btn panel__back-btn--on-photo" onClick={onBackToSchool}>
-            ← {toTitleCase(previousSchool.name)}
-          </button>
-        )}
       </div>
+
+      {previousSchool && (
+        <button className="panel__back-to-school-btn" onClick={onBackToSchool}>
+          ← {toTitleCase(previousSchool.name)}
+        </button>
+      )}
 
       <div className="panel__header">
         <h2 className="panel__name">{rental.address}</h2>
