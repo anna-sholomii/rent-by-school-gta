@@ -625,25 +625,49 @@ export default function MapView({
     map.addLayer(clusterGroup);
     onVisibleCountChange && onVisibleCountChange(visibleSchoolCount, 0);
 
-    // Show/hide permanent tooltips based on zoom level + rating
+    // Show labels without overlap: sort by rating, greedily keep non-overlapping ones
     const updateLabelVisibility = () => {
       const zoom = map.getZoom();
       const minRating =
-        zoom >= 15 ? -Infinity  // show all
+        zoom >= 15 ? -Infinity
         : zoom >= 14 ? 5.0
         : zoom >= 13 ? 7.5
         : zoom >= 12 ? 9.0
-        : Infinity;             // hide all below zoom 12
-      schoolLayersRef.current.forEach(marker => {
-        const score = marker.options.fraserScore ?? -1;
+        : Infinity;
+
+      // Hide everything first
+      schoolLayersRef.current.forEach(m => m.getTooltip()?.setOpacity(0));
+
+      // Candidates: individually visible (not clustered) and above rating threshold
+      const candidates = schoolLayersRef.current
+        .filter(m => m.getElement() && (m.options.fraserScore ?? -1) >= minRating)
+        .sort((a, b) => (b.options.fraserScore ?? 0) - (a.options.fraserScore ?? 0));
+
+      const shownRects = [];
+      candidates.forEach(marker => {
         const tooltip = marker.getTooltip();
         if (!tooltip) return;
-        tooltip.setOpacity(score >= minRating ? 1 : 0);
+        const pt = map.latLngToContainerPoint(marker.getLatLng());
+        const name = marker.options.schoolName || '';
+        const labelW = Math.min(name.length * 6.5 + 16, 220);
+        const labelH = 24;
+        // Tooltip sits above the marker center (icon anchor is center, tooltip direction=top offset=-10)
+        const x = pt.x - labelW / 2;
+        const y = pt.y - 27 - 10 - labelH - 4; // icon half-height + offset + label height + gap
+        const overlaps = shownRects.some(r =>
+          x < r.x + r.w + 6 && x + labelW + 6 > r.x &&
+          y < r.y + r.h + 6 && y + labelH + 6 > r.y
+        );
+        if (!overlaps) {
+          tooltip.setOpacity(1);
+          shownRects.push({ x, y, w: labelW, h: labelH });
+        }
       });
     };
 
     updateLabelVisibility();
     map.on('zoomend', updateLabelVisibility);
+    map.on('moveend', updateLabelVisibility);
 
     // Attach keyboard handlers to any markers already in the DOM (non-clustered at current zoom).
     // Markers hidden inside clusters have no element yet; they pick up the handler when
@@ -663,6 +687,7 @@ export default function MapView({
 
     return () => {
       map.off('zoomend', updateLabelVisibility);
+      map.off('moveend', updateLabelVisibility);
     };
   }, [schools, ratingMin, ratingMax, boardFilter, languageFilter, gradeLevelFilter]);
 
